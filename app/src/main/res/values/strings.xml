@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Parking auto renew</string>
+    <string name="status_enter_plate">Enter your license plate</string>
+    <string name="status_running">Auto renew is running</string>
+    <string name="status_stopped">Auto renew stopped</string>
+    <string name="status_idle">Idle</string>
+    <string name="no_confirmation">No confirmation yet</string>
+    <string name="confirmed_title">Parking Confirmed!</string>
+    <string name="confirmation_code">Confirmation: %1$s</string>
+    <string name="start_time">Start: %1$s</string>
+    <string name="expire_time">Expire: %1$s</string>
+    <string name="plate_line">Plate: %1$s</string>
+    <string name="location_line">Location: %1$s</string>
+</resources>
