@@ -28,6 +28,8 @@ class AutoRenewActivity : AppCompatActivity() {
     private lateinit var parkingDurationSpinner: Spinner
     private lateinit var renewalFrequencySpinner: Spinner
     private lateinit var statusText: TextView
+    private lateinit var successCountText: TextView
+    private lateinit var failureCountText: TextView
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var automationWebView: WebView
@@ -52,6 +54,8 @@ class AutoRenewActivity : AppCompatActivity() {
         parkingDurationSpinner = findViewById(R.id.parkingDurationSpinner)
         renewalFrequencySpinner = findViewById(R.id.renewalFrequencySpinner)
         statusText = findViewById(R.id.statusText)
+        successCountText = findViewById(R.id.successCountText)
+        failureCountText = findViewById(R.id.failureCountText)
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
 
@@ -59,6 +63,7 @@ class AutoRenewActivity : AppCompatActivity() {
         setupSpinners()
         createNotificationChannel()
         setupButtonListeners()
+        loadCounters()
 
         Log.d("AutoRenewActivity", "=== onCreate() COMPLETE ===")
     }
@@ -195,11 +200,13 @@ class AutoRenewActivity : AppCompatActivity() {
             onSuccess = { confirmationDetails ->
                 Log.d("AutoRenewActivity", "Renewal completed successfully")
                 lastConfirmationDetails = confirmationDetails
+                incrementSuccessCount()
                 updateStatusWithConfirmation(confirmationDetails)
                 startCountdownTimer()
             },
             onError = { error ->
                 Log.e("AutoRenewActivity", "Renewal error: $error")
+                incrementFailureCount()
                 statusText.text = "Status: Erro na renovação\n$error"
             }
         )
@@ -305,6 +312,39 @@ class AutoRenewActivity : AppCompatActivity() {
         }
 
         Log.d("AutoRenewActivity", "Auto-renew stopped, service stopped")
+    }
+
+    private fun loadCounters() {
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        val successCount = prefs.getInt("success_count", 0)
+        val failureCount = prefs.getInt("failure_count", 0)
+        
+        successCountText.text = successCount.toString()
+        failureCountText.text = failureCount.toString()
+        
+        Log.d("AutoRenewActivity", "Counters loaded - Success: $successCount, Failure: $failureCount")
+    }
+    
+    private fun incrementSuccessCount() {
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        val currentCount = prefs.getInt("success_count", 0)
+        val newCount = currentCount + 1
+        
+        prefs.edit().putInt("success_count", newCount).apply()
+        successCountText.text = newCount.toString()
+        
+        Log.d("AutoRenewActivity", "Success count incremented to $newCount")
+    }
+    
+    private fun incrementFailureCount() {
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        val currentCount = prefs.getInt("failure_count", 0)
+        val newCount = currentCount + 1
+        
+        prefs.edit().putInt("failure_count", newCount).apply()
+        failureCountText.text = newCount.toString()
+        
+        Log.d("AutoRenewActivity", "Failure count incremented to $newCount")
     }
 
     private fun createNotificationChannel() {
