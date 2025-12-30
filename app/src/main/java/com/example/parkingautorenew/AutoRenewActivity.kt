@@ -88,7 +88,7 @@ class AutoRenewActivity : AppCompatActivity() {
         parkingDurationSpinner.adapter = durationAdapter
 
         // Spinner de Periodicidade de Renovação
-        val frequencyOptions = arrayOf("30 min", "1 hour", "1:30 hour", "2 hour")
+        val frequencyOptions = arrayOf("5 min (test)", "30 min", "1 hour", "1:30 hour", "2 hour")
         val frequencyAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, frequencyOptions)
         frequencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         renewalFrequencySpinner.adapter = frequencyAdapter
@@ -160,6 +160,7 @@ class AutoRenewActivity : AppCompatActivity() {
         Log.d("AutoRenewActivity", "Scheduling periodic renewal - Frequency: $frequency")
 
         val timeUnit = when (frequency) {
+            "5 min (test)" -> Pair(5, TimeUnit.MINUTES)
             "30 min" -> Pair(30, TimeUnit.MINUTES)
             "1 hour" -> Pair(1, TimeUnit.HOURS)
             "1:30 hour" -> Pair(90, TimeUnit.MINUTES)
@@ -231,6 +232,7 @@ class AutoRenewActivity : AppCompatActivity() {
         
         // Calcular próxima renovação
         val intervalMillis = when (frequency) {
+            "5 min (test)" -> 5 * 60 * 1000L
             "30 min" -> 30 * 60 * 1000L
             "1 hour" -> 60 * 60 * 1000L
             "1:30 hour" -> 90 * 60 * 1000L

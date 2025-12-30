@@ -161,6 +161,7 @@ class ParkingRenewalService : Service() {
         val frequency = prefs.getString("renewal_frequency", "1 hour") ?: "1 hour"
         
         val delayMillis = when (frequency) {
+            "5 min (test)" -> 5 * 60 * 1000L
             "30 min" -> 30 * 60 * 1000L
             "1 hour" -> 60 * 60 * 1000L
             "1:30 hour" -> 90 * 60 * 1000L
