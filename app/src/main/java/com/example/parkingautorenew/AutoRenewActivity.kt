@@ -13,10 +13,14 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.ArrayAdapter
+import android.webkit.JavascriptInterface
+import android.webkit.WebSettings
+import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
+import java.text.SimpleDateFormat
 
 class AutoRenewActivity : AppCompatActivity() {
     private lateinit var licensePlateInput: EditText
@@ -25,9 +29,11 @@ class AutoRenewActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
+    private lateinit var automationWebView: WebView
 
     private var isRunning = false
     private var renewalWorkTag = "parking_auto_renew"
+    private var automationManager: ParkingAutomationManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,11 +48,27 @@ class AutoRenewActivity : AppCompatActivity() {
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
 
+        setupAutomationWebView()
         setupSpinners()
         createNotificationChannel()
         setupButtonListeners()
 
         Log.d("AutoRenewActivity", "=== onCreate() COMPLETE ===")
+    }
+
+    private fun setupAutomationWebView() {
+        Log.d("AutoRenewActivity", "Setting up automation WebView")
+        
+        automationWebView = WebView(this)
+        automationWebView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+        }
+        
+        automationWebView.addJavascriptInterface(AutomationBridge(), "Android")
+        
+        Log.d("AutoRenewActivity", "Automation WebView configured")
     }
 
     private fun setupSpinners() {
@@ -146,28 +168,27 @@ class AutoRenewActivity : AppCompatActivity() {
     private fun executeRenewal(plate: String, duration: String) {
         Log.d("AutoRenewActivity", "Executing renewal - Plate: $plate, Duration: $duration")
 
-        // Executar em thread separada para não bloquear UI
-        Thread {
-            try {
-                // Aqui será executada a automação do preenchimento do formulário
-                Log.d("AutoRenewActivity", "Renewal execution started")
+        statusText.text = "Status: Executando renovação...\nPlaca: $plate"
 
-                // TODO: Implementar a automação aqui
-                // 1. Carregar a URL
-                // 2. Preencher formulário com os dados
-                // 3. Clicar botões necessários
-
-                Handler(Looper.getMainLooper()).post {
-                    statusText.text = "Status: Auto-Renew ativo\nÚltima renovação: ${java.text.SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis())}"
-                    Log.d("AutoRenewActivity", "Renewal completed successfully")
-                }
-            } catch (e: Exception) {
-                Log.e("AutoRenewActivity", "Error during renewal: ${e.message}")
-                Handler(Looper.getMainLooper()).post {
-                    statusText.text = "Status: Erro na renovação\n${e.message}"
-                }
+        // Criar automação
+        automationManager = ParkingAutomationManager(
+            automationWebView,
+            onSuccess = {
+                Log.d("AutoRenewActivity", "Renewal completed successfully")
+                val timestamp = SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis())
+                statusText.text = "Status: Auto-Renew ativo\nÚltima renovação: $timestamp"
+            },
+            onError = { error ->
+                Log.e("AutoRenewActivity", "Renewal error: $error")
+                statusText.text = "Status: Erro na renovação\n$error"
             }
-        }.start()
+        )
+
+        // Guardar placa na tag do WebView para a automação usar
+        automationWebView.tag = plate
+        
+        // Iniciar automação
+        automationManager?.start(plate, duration)
     }
 
     private fun stopAutoRenew() {
@@ -216,5 +237,27 @@ class AutoRenewActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("AutoRenewActivity", "onDestroy() called")
+        automationManager?.stop()
+    }
+
+    inner class AutomationBridge {
+        @JavascriptInterface
+        fun onPageReady(pageNumber: Int) {
+            Log.d("AutomationBridge", "onPageReady: $pageNumber")
+            automationManager?.onPageReady(pageNumber)
+        }
+
+        @JavascriptInterface
+        fun onStepComplete(step: String) {
+            Log.d("AutomationBridge", "onStepComplete: $step")
+        }
+
+        @JavascriptInterface
+        fun onError(message: String) {
+            Log.e("AutomationBridge", "Error: $message")
+            runOnUiThread {
+                statusText.text = "Status: Erro\n$message"
+            }
+        }
     }
 }
