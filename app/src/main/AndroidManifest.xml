@@ -6,10 +6,8 @@
     <application
         android:allowBackup="true"
         android:label="Parking Info"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ParkingAutoRenew">
+        android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
 
         <activity
             android:name=".MainActivity"

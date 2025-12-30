@@ -13,9 +13,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
-        // For AlarmManager exact alarms behavior on some devices
-        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -25,9 +22,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-        }
-        debug {
-            isMinifyEnabled = false
         }
     }
 
