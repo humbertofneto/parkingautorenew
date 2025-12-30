@@ -32,8 +32,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="GET INFO"
-            android:textSize="16sp"
-            android:layout_marginEnd="8dp"/>
+            android:textSize="14sp"
+            android:layout_marginEnd="4dp"/>
 
         <Button
             android:id="@+id/clearBtn"
@@ -41,7 +41,18 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="CLEAR"
-            android:textSize="16sp"/>
+            android:textSize="14sp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginStart="4dp"/>
+
+        <Button
+            android:id="@+id/autoRenewBtn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="AUTO RENEW"
+            android:textSize="14sp"
+            android:layout_marginStart="4dp"/>
 
     </LinearLayout>
 

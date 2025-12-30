@@ -13,12 +13,14 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var urlInput: EditText
     private lateinit var getInfoBtn: Button
     private lateinit var clearBtn: Button
+    private lateinit var autoRenewBtn: Button
     private lateinit var infoText: TextView
     private lateinit var webView: WebView
     
@@ -37,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         urlInput = findViewById(R.id.urlInput)
         getInfoBtn = findViewById(R.id.getInfoBtn)
         clearBtn = findViewById(R.id.clearBtn)
+        autoRenewBtn = findViewById(R.id.autoRenewBtn)
         infoText = findViewById(R.id.infoText)
         webView = findViewById(R.id.webView)
         Log.d("MainActivity", "All UI elements found and bound")
@@ -102,6 +105,12 @@ class MainActivity : AppCompatActivity() {
             capturedPages.clear()
             webView.clearHistory()
             webView.loadUrl("about:blank")
+        }
+
+        autoRenewBtn.setOnClickListener {
+            Log.d("MainActivity", "AUTO RENEW clicked - Navigating to AutoRenewActivity")
+            val intent = Intent(this, AutoRenewActivity::class.java)
+            startActivity(intent)
         }
     }
     
