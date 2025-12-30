@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         urlInput = findViewById(R.id.urlInput)
         getInfoBtn = findViewById(R.id.getInfoBtn)
         clearBtn = findViewById(R.id.clearBtn)
-        infoText = findViewById(R.id.infoTextView)
+        infoText = findViewById(R.id.infoText)
         webView = findViewById(R.id.webView)
         Log.d("MainActivity", "All UI elements found and bound")
         
