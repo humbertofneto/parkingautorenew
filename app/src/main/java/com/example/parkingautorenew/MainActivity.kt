@@ -29,12 +29,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("MainActivity", "=== onCreate() START ===")
+        
         setContentView(R.layout.activity_main)
+        Log.d("MainActivity", "Layout inflated from activity_main.xml")
 
         urlInput = findViewById(R.id.urlInput)
         getInfoBtn = findViewById(R.id.getInfoBtn)
         clearBtn = findViewById(R.id.clearBtn)
         infoText = findViewById(R.id.infoText)
+        Log.d("MainActivity", "All UI elements found and bound")
         
         // Criar WebView uma única vez
         initializeWebView()
@@ -42,9 +46,11 @@ class MainActivity : AppCompatActivity() {
         // Forçar teclado quando EditText recebe foco
         urlInput.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
+                Log.d("MainActivity", "urlInput gained focus")
                 showKeyboard()
             }
         }
+        Log.d("MainActivity", "Focus listener attached to urlInput")
 
         getInfoBtn.setOnClickListener {
             val url = urlInput.text.toString().trim()
