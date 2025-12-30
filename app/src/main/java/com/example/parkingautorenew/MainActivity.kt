@@ -9,11 +9,14 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var urlInput: EditText
     private lateinit var getInfoBtn: Button
+    private lateinit var clearBtn: Button
     private lateinit var infoText: TextView
     private var webView: WebView? = null
 
@@ -21,16 +24,33 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        urlInput = findViewById(R.id.urlInput)
         getInfoBtn = findViewById(R.id.getInfoBtn)
+        clearBtn = findViewById(R.id.clearBtn)
         infoText = findViewById(R.id.infoText)
 
         getInfoBtn.setOnClickListener {
+            val url = urlInput.text.toString().trim()
+            if (url.isEmpty()) {
+                infoText.text = "Please enter a URL"
+                return@setOnClickListener
+            }
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                infoText.text = "URL must start with http:// or https://"
+                return@setOnClickListener
+            }
             infoText.text = "Loading page..."
-            fetchPageInfo()
+            fetchPageInfo(url)
+        }
+
+        clearBtn.setOnClickListener {
+            infoText.text = "Enter a URL and click GET INFO"
+            webView?.destroy()
+            webView = null
         }
     }
 
-    private fun fetchPageInfo() {
+    private fun fetchPageInfo(url: String) {
         Handler(Looper.getMainLooper()).post {
             try {
                 val wv = WebView(this)
@@ -51,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 
-                wv.loadUrl("https://www.offstreet.io/location/LWLN9BUO")
+                wv.loadUrl(url)
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error: ${e.message}", e)
                 infoText.text = "Error: ${e.message}"
