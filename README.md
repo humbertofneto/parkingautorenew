@@ -40,7 +40,7 @@ gradle wrapper --gradle-version 8.7 --distribution-type bin
 
 ## Build no macOS
 ```bash
-cd /Users/humferre/localcode/ParkingAutoRenew
+cd /Users/humferre/localcode/autorenew
 ./gradlew :app:assembleDebug --warning-mode all
 ```
 
