@@ -401,64 +401,59 @@ class ParkingAutomationManager(
                 const allText = document.body.innerText;
                 console.log('PAGE 5 FULL TEXT:', allText);
                 
-                // Tentar extrair Start Time - mais flexível
-                let startMatch = allText.match(/Start\s*[:\-]?\s*([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s+(?:AM|PM))/i);
-                if (startMatch) result.startTime = startMatch[1];
-                if (!result.startTime) {
-                  // Tentar padrão alternativo
-                  startMatch = allText.match(/(?:starts?|begins?)\s+([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}[\\s\\S]{0,30}?\d{1,2}:\d{2}\s+(?:AM|PM))/i);
-                  if (startMatch) result.startTime = startMatch[1].trim();
+                // Extrair Start Time - formato: "Start: 1:31 pm" em uma linha, "Dec 31, 2025" em outra
+                let startMatch = allText.match(/Start:\s*(\d{1,2}:\d{2}\s*(?:am|pm))[\s\S]{0,50}?([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})/i);
+                if (startMatch) {
+                  result.startTime = startMatch[2] + ' ' + startMatch[1]; // "Dec 31, 2025 1:31 pm"
                 }
                 console.log('Start Match:', startMatch);
                 
-                // Tentar extrair Expiry Time - mais flexível
-                let expiryMatch = allText.match(/Expir(?:y|es|ing|e)\s*[:\-]?\s*([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s+(?:AM|PM))/i);
-                if (expiryMatch) result.expiryTime = expiryMatch[1];
-                if (!result.expiryTime) {
-                  // Tentar padrão alternativo
-                  expiryMatch = allText.match(/(?:until|till|through)\s+([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}[\\s\\S]{0,30}?\d{1,2}:\d{2}\s+(?:AM|PM))/i);
-                  if (expiryMatch) result.expiryTime = expiryMatch[1].trim();
+                // Extrair Expiry Time - formato: "Expiry: 2:31 pm" em uma linha, "Dec 31, 2025" em outra
+                let expiryMatch = allText.match(/Expir[y]?:\s*(\d{1,2}:\d{2}\s*(?:am|pm))[\s\S]{0,50}?([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})/i);
+                if (expiryMatch) {
+                  result.expiryTime = expiryMatch[2] + ' ' + expiryMatch[1]; // "Dec 31, 2025 2:31 pm"
                 }
                 console.log('Expiry Match:', expiryMatch);
                 
-                // Extrair placa - mais flexível
-                let plateMatch = allText.match(/(?:Plate|License|Vehicle)\s*[:\-]?\s*([A-Z]{2,3}[\s\-]?[0-9]{2,4}(?:[\s\-]?[A-Z]{1,2})?)/);
+                // Extrair placa - procurar padrão de placa antes de "Alberta"
+                let plateMatch = allText.match(/\n\s*([A-Z]{2,4}[\s]?[0-9]{3,4})\s*\n\s*Alberta/i);
                 if (plateMatch) {
-                  result.plate = plateMatch[1].toUpperCase().trim();
+                  result.plate = plateMatch[1].toUpperCase().replace(/\s+/g, '').trim();
                 } else {
-                  // Tentar padrão simples de letras + números
-                  plateMatch = allText.match(/([A-Z]{1,3}[\s\-]?[0-9]{3,4}[\s\-]?[A-Z]{0,2})/);
-                  if (plateMatch) result.plate = plateMatch[1].toUpperCase().trim();
+                  // Fallback: procurar qualquer sequência de letras e números
+                  plateMatch = allText.match(/\b([A-Z]{2,4}[0-9]{3,4})\b/);
+                  if (plateMatch) result.plate = plateMatch[1].toUpperCase();
                 }
                 console.log('Plate Match:', plateMatch);
                 
-                // Extrair location - muito flexível
-                // Procurar por padrões de "City - Sector/Location"
-                let locationMatch = allText.match(/(Calgary[\\s\\S]{0,200}?(?:Seton|Barlow|South|North|West|East|Centre|Center|Downtown|Midtown)[\\s\\S]{0,100}?)(?=[\\n\\r]|$)/i);
-                if (!locationMatch) {
-                  // Procurar apenas Calgary seguido de algo
-                  locationMatch = allText.match(/(Calgary[^\\n]{10,150})/i);
-                }
+                // Extrair Location - "Calgary - Seton Professional Centre" + nova linha + "Momentum Health Seton"
+                let locationMatch = allText.match(/Calgary\s*-\s*([^\n]+)\s*\n\s*([^\n]+)\s*\n/i);
                 if (locationMatch) {
-                  // Limpar a string
-                  let location = locationMatch[1].replace(/[\\n\\r]+/g, ' ').trim();
-                  // Remover espaços múltiplos
-                  location = location.replace(/\\s{2,}/g, ' ');
-                  // Truncar se muito longo
-                  if (location.length > 100) {
-                    location = location.substring(0, 100).trim();
+                  // Combinar as duas linhas
+                  let loc1 = locationMatch[1].trim();
+                  let loc2 = locationMatch[2].trim();
+                  // Evitar pegar a placa
+                  if (!loc2.match(/^[A-Z]{2,4}[0-9]{3,4}$/)) {
+                    result.location = 'Calgary - ' + loc1 + ' / ' + loc2;
+                  } else {
+                    result.location = 'Calgary - ' + loc1;
                   }
-                  result.location = location;
+                } else {
+                  // Fallback: apenas "Calgary - ..."
+                  locationMatch = allText.match(/Calgary\s*-\s*([^\n]{5,80})/i);
+                  if (locationMatch) {
+                    result.location = 'Calgary - ' + locationMatch[1].trim();
+                  }
                 }
                 console.log('Location Match:', locationMatch);
                 
-                // Extrair confirmation number - muito flexível
-                let confirmMatch = allText.match(/(?:Confirmation|Reference|Booking|Order|ID)[#\\s\-:]*([A-Z0-9]{6,20})/i);
+                // Extrair Confirmation Number - formato: "#472983733" em linha separada
+                let confirmMatch = allText.match(/#(\d{8,15})/);
                 if (confirmMatch) {
                   result.confirmationNumber = confirmMatch[1];
                 } else {
-                  // Procurar números longos que possam ser confirmação
-                  confirmMatch = allText.match(/[#:]?\\s*([0-9]{8,15})/);
+                  // Fallback: procurar após "Confirmation"
+                  confirmMatch = allText.match(/Confirmation[\s\n#]*(\d{8,15})/i);
                   if (confirmMatch) result.confirmationNumber = confirmMatch[1];
                 }
                 console.log('Confirmation Match:', confirmMatch);
