@@ -4,6 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.BroadcastReceiver
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -40,6 +42,43 @@ class AutoRenewActivity : AppCompatActivity() {
     private val countdownHandler = Handler(Looper.getMainLooper())
     private var nextRenewalTimeMillis: Long = 0
     private var lastConfirmationDetails: ConfirmationDetails? = null
+    
+    // BroadcastReceiver para receber notificações do Service
+    private val renewalBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "RENEWAL_UPDATE") {
+                val status = intent.getStringExtra("status") ?: "unknown"
+                val confirmation = intent.getStringExtra("confirmation") ?: ""
+                
+                Log.d("AutoRenewActivity", "Broadcast received: status=$status, confirmation=$confirmation")
+                
+                if (status == "success") {
+                    // Extrair dados de confirmação do intent
+                    val startTime = intent.getStringExtra("startTime") ?: "N/A"
+                    val expiryTime = intent.getStringExtra("expiryTime") ?: "N/A"
+                    val plate = intent.getStringExtra("plate") ?: "N/A"
+                    val location = intent.getStringExtra("location") ?: "N/A"
+                    val confirmationNumber = intent.getStringExtra("confirmationNumber") ?: "N/A"
+                    
+                    val confirmationDetails = ConfirmationDetails(
+                        startTime = startTime,
+                        expiryTime = expiryTime,
+                        plate = plate,
+                        location = location,
+                        confirmationNumber = confirmationNumber
+                    )
+                    
+                    lastConfirmationDetails = confirmationDetails
+                    incrementSuccessCount()
+                    updateStatusWithConfirmation(confirmationDetails)
+                    startCountdownTimer()
+                } else if (status == "error") {
+                    incrementFailureCount()
+                    statusText.text = "Status: Erro na renovação\n$confirmation"
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +103,16 @@ class AutoRenewActivity : AppCompatActivity() {
         createNotificationChannel()
         setupButtonListeners()
         loadCounters()
+        
+        // Registrar BroadcastReceiver para atualizações do Service
+        val filter = IntentFilter("RENEWAL_UPDATE")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(renewalBroadcastReceiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(renewalBroadcastReceiver, filter)
+        }
+        
+        Log.d("AutoRenewActivity", "BroadcastReceiver registered")
 
         Log.d("AutoRenewActivity", "=== onCreate() COMPLETE ===")
     }
@@ -388,6 +437,14 @@ class AutoRenewActivity : AppCompatActivity() {
         Log.d("AutoRenewActivity", "onDestroy() called")
         countdownHandler.removeCallbacksAndMessages(null)
         automationManager?.stop()
+        
+        // Desregistrar BroadcastReceiver
+        try {
+            unregisterReceiver(renewalBroadcastReceiver)
+            Log.d("AutoRenewActivity", "BroadcastReceiver unregistered")
+        } catch (e: Exception) {
+            Log.e("AutoRenewActivity", "Error unregistering receiver: ${e.message}")
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

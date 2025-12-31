@@ -166,11 +166,32 @@ class ParkingRenewalService : Service() {
                     putLong("last_renewal_time", System.currentTimeMillis())
                     apply()
                 }
+                
+                // Enviar broadcast para a Activity atualizar a UI
+                val intent = Intent("RENEWAL_UPDATE").apply {
+                    putExtra("status", "success")
+                    putExtra("confirmation", confirmationDetails.confirmationNumber)
+                    putExtra("startTime", confirmationDetails.startTime)
+                    putExtra("expiryTime", confirmationDetails.expiryTime)
+                    putExtra("plate", confirmationDetails.plate)
+                    putExtra("location", confirmationDetails.location)
+                    putExtra("confirmationNumber", confirmationDetails.confirmationNumber)
+                }
+                sendBroadcast(intent)
+                Log.d(TAG, "Broadcast sent: RENEWAL_UPDATE with status=success")
             },
             onError = { error ->
                 Log.e(TAG, "========== Service: Renewal ERROR ==========")
                 Log.e(TAG, "Error: $error")
                 updateNotification("Erro na renovação", error)
+                
+                // Enviar broadcast de erro para a Activity
+                val intent = Intent("RENEWAL_UPDATE").apply {
+                    putExtra("status", "error")
+                    putExtra("confirmation", error)
+                }
+                sendBroadcast(intent)
+                Log.d(TAG, "Broadcast sent: RENEWAL_UPDATE with status=error")
             }
         )
         
