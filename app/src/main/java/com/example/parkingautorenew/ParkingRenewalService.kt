@@ -1,5 +1,6 @@
 package com.example.parkingautorenew
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,6 +24,7 @@ class ParkingRenewalService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "parking_auto_renew_channel"
         private const val CHANNEL_NAME = "Parking Auto Renew"
+        private const val ALARM_REQUEST_CODE = 1234
     }
     
     private lateinit var webView: WebView
@@ -167,10 +169,16 @@ class ParkingRenewalService : Service() {
             else -> 60 * 60 * 1000L
         }
         
+        Log.d(TAG, "Scheduling next renewal in ${delayMillis / 1000 / 60} minutes")
+        
+        // Usar Handler para agendar próxima renovação
         renewalHandler.postDelayed({
             if (isRunning) {
+                Log.d(TAG, "Timer fired - executing renewal")
                 executeRenewal()
                 scheduleNextRenewal()
+            } else {
+                Log.d(TAG, "Timer fired but service not running, cancelling")
             }
         }, delayMillis)
         
