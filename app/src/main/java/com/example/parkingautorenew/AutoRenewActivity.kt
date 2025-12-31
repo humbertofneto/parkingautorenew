@@ -53,7 +53,7 @@ class AutoRenewActivity : AppCompatActivity() {
             if (intent?.action == "RENEWAL_START") {
                 val plate = intent.getStringExtra("plate") ?: "desconhecida"
                 Log.d("AutoRenewActivity", "Broadcast received: RENEWAL_START")
-                statusText.text = "Status: Executando renovação...\nPlaca: $plate"
+                statusText.text = "Status: ⏳ EXECUTANDO RENOVAÇÃO...\nPlaca: $plate\n\nAguarde..."
             } else if (intent?.action == "RENEWAL_UPDATE") {
                 val status = intent.getStringExtra("status") ?: "unknown"
                 val confirmation = intent.getStringExtra("confirmation") ?: ""
@@ -78,8 +78,15 @@ class AutoRenewActivity : AppCompatActivity() {
                     
                     lastConfirmationDetails = confirmationDetails
                     incrementSuccessCount()
-                    updateStatusWithConfirmation(confirmationDetails)
-                    startCountdownTimer()
+                    
+                    // Mostrar mensagem de sucesso temporariamente
+                    statusText.text = "Status: ✅ RENOVAÇÃO CONCLUÍDA COM SUCESSO!\n\nAtualizando informações..."
+                    
+                    // Após 1.5 segundos, mostrar detalhes completos
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        updateStatusWithConfirmation(confirmationDetails)
+                        startCountdownTimer()
+                    }, 1500)
                 } else if (status == "error") {
                     incrementFailureCount()
                     statusText.text = "Status: Erro na renovação\n$confirmation"
