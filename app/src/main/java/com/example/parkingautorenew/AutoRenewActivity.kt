@@ -439,30 +439,21 @@ class AutoRenewActivity : AppCompatActivity() {
         stopButton.isEnabled = false
         stopButton.visibility = View.GONE
         
-        // Mostrar campos de input novamente para preencher
-        licensePlateInput.visibility = View.VISIBLE
-        parkingDurationSpinner.visibility = View.VISIBLE
-        renewalFrequencySpinner.visibility = View.VISIBLE
+        // ESCONDER campos de input
+        licensePlateInput.visibility = View.GONE
+        parkingDurationSpinner.visibility = View.GONE
+        renewalFrequencySpinner.visibility = View.GONE
         
-        // Mostrar labels novamente
-        licensePlateLabel.visibility = View.VISIBLE
-        parkingDurationLabel.visibility = View.VISIBLE
-        renewalFrequencyLabel.visibility = View.VISIBLE
-        
-        // Resetar labels para texto original
-        licensePlateLabel.text = "Placa do Veículo"
-        parkingDurationLabel.text = "Tempo de Estacionamento"
-        renewalFrequencyLabel.text = "Renovar a Cada"
-        
-        // Limpar campos de entrada
-        licensePlateInput.text.clear()
+        // ESCONDER labels dos campos
+        licensePlateLabel.visibility = View.GONE
+        parkingDurationLabel.visibility = View.GONE
+        renewalFrequencyLabel.visibility = View.GONE
         
         // Esconder countdown
         countdownText.visibility = View.GONE
         
-        // Esconder resumo e tempo total
+        // Esconder resumo (statusText)
         statusText.visibility = View.GONE
-        totalTimeText.visibility = View.GONE
 
         // Parar Foreground Service
         val serviceIntent = Intent(this, ParkingRenewalService::class.java)
@@ -472,8 +463,27 @@ class AutoRenewActivity : AppCompatActivity() {
         // Cancelar work agendado
         WorkManager.getInstance(this).cancelAllWorkByTag(renewalWorkTag)
 
-        // Obter preferências
+        // Obter preferências e calcular tempo total
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        val firstRenewalTime = prefs.getLong("first_renewal_time", 0)
+        val lastRenewalTime = prefs.getLong("last_renewal_time", 0)
+        
+        // Calcular e mostrar tempo total
+        if (firstRenewalTime > 0 && lastRenewalTime > 0) {
+            val totalMillis = lastRenewalTime - firstRenewalTime
+            val hours = (totalMillis / 1000 / 60 / 60).toInt()
+            val minutes = ((totalMillis / 1000 / 60) % 60).toInt()
+            
+            val totalTimeValue = when {
+                hours > 0 -> "${hours}h ${minutes}min"
+                minutes > 0 -> "${minutes}min"
+                else -> "menos de 1 minuto"
+            }
+            
+            // Mostrar tempo total em TextView separado com label
+            totalTimeText.visibility = View.VISIBLE
+            totalTimeText.text = "⏱ Tempo total estacionado: $totalTimeValue"
+        }
 
         // Manter contadores visíveis - NÃO zerar aqui
         // Os contadores serão zerados apenas ao pressionar START para nova reserva
