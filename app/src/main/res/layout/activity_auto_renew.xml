@@ -39,6 +39,7 @@
 
             <!-- Placa do Veículo -->
             <TextView
+                android:id="@+id/licensePlateLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Placa do Veículo"
@@ -60,6 +61,7 @@
 
             <!-- Tempo de Estacionamento -->
             <TextView
+                android:id="@+id/parkingDurationLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Tempo de Estacionamento"

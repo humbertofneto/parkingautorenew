@@ -36,6 +36,8 @@ class AutoRenewActivity : AppCompatActivity() {
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var automationWebView: WebView
+    private lateinit var licensePlateLabel: TextView
+    private lateinit var parkingDurationLabel: TextView
 
     private var isRunning = false
     private var renewalWorkTag = "parking_auto_renew"
@@ -102,6 +104,8 @@ class AutoRenewActivity : AppCompatActivity() {
         failureCountText = findViewById(R.id.failureCountText)
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
+        licensePlateLabel = findViewById(R.id.licensePlateLabel)
+        parkingDurationLabel = findViewById(R.id.parkingDurationLabel)
 
         setupAutomationWebView()
         setupSpinners()
@@ -189,6 +193,10 @@ class AutoRenewActivity : AppCompatActivity() {
         licensePlateInput.visibility = View.GONE
         parkingDurationSpinner.visibility = View.GONE
         renewalFrequencySpinner.visibility = View.GONE
+        
+        // Atualizar labels com os valores escolhidos
+        licensePlateLabel.text = "Placa do Veículo: $plate"
+        parkingDurationLabel.text = "Tempo de Estacionamento: $duration"
 
         statusText.text = "Status: Auto-Renew ativo\nPlaca: $plate\nDuração: $duration\nRenovação: a cada $frequency"
 
@@ -391,6 +399,10 @@ class AutoRenewActivity : AppCompatActivity() {
         licensePlateInput.visibility = View.VISIBLE
         parkingDurationSpinner.visibility = View.VISIBLE
         renewalFrequencySpinner.visibility = View.VISIBLE
+        
+        // Resetar labels para texto original
+        licensePlateLabel.text = "Placa do Veículo"
+        parkingDurationLabel.text = "Tempo de Estacionamento"
 
         // Obter estatísticas
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
