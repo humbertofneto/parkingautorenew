@@ -385,6 +385,66 @@ class ParkingAutomationManager(
             return
         }
         
+        // PRIMEIRO: Inspecionar elementos da página
+        val inspectScript = """
+            (function(){
+              try {
+                console.log('========== PAGE 5 INSPECTION ==========');
+                
+                // Procurar checkbox de email
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                console.log('CHECKBOXES FOUND:', checkboxes.length);
+                checkboxes.forEach((cb, idx) => {
+                  console.log('Checkbox #' + idx + ':', cb.outerHTML);
+                  console.log('  - checked:', cb.checked);
+                  console.log('  - id:', cb.id);
+                  console.log('  - name:', cb.name);
+                  console.log('  - labels:', cb.labels ? cb.labels.length : 0);
+                  if (cb.labels && cb.labels.length > 0) {
+                    console.log('  - label text:', cb.labels[0].textContent);
+                  }
+                });
+                
+                // Procurar campo de email
+                const emailInputs = document.querySelectorAll('input[type="email"], input[id*="email"], input[name*="email"]');
+                console.log('EMAIL INPUTS FOUND:', emailInputs.length);
+                emailInputs.forEach((inp, idx) => {
+                  console.log('Email Input #' + idx + ':', inp.outerHTML);
+                  console.log('  - id:', inp.id);
+                  console.log('  - name:', inp.name);
+                  console.log('  - placeholder:', inp.placeholder);
+                  console.log('  - disabled:', inp.disabled);
+                  console.log('  - visible:', inp.offsetParent !== null);
+                });
+                
+                // Procurar todos os botões
+                const buttons = document.querySelectorAll('button');
+                console.log('BUTTONS FOUND:', buttons.length);
+                buttons.forEach((btn, idx) => {
+                  console.log('Button #' + idx + ':', btn.textContent.trim());
+                  console.log('  - outerHTML:', btn.outerHTML);
+                  console.log('  - disabled:', btn.disabled);
+                  console.log('  - visible:', btn.offsetParent !== null);
+                });
+                
+                console.log('========================================');
+                return 'inspection_complete';
+              } catch(e) {
+                console.error('Inspection error:', e.message);
+                return 'error: ' + e.message;
+              }
+            })();
+        """.trimIndent()
+        
+        Log.d(TAG, "Inspecting Page 5 elements...")
+        webView.evaluateJavascript(inspectScript) { result ->
+            Log.d(TAG, "Inspection result: $result")
+            // Após inspeção, continuar com extração normal
+            extractConfirmationData()
+        }
+    }
+    
+    private fun extractConfirmationData() {
         // Primeiro extrair os dados de confirmação
         val extractScript = """
             (function(){
