@@ -495,8 +495,7 @@ class AutoRenewActivity : AppCompatActivity() {
         // Guardar placa na tag do WebView para a automação usar
         automationWebView.tag = plate
         
-        // Obter configurações de email
-        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        // Obter configurações de email (reusar prefs já declarado)
         val sendEmail = prefs.getBoolean("send_email", false)
         val email = prefs.getString("user_email", "") ?: ""
         
