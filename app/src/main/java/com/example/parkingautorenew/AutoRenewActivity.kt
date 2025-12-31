@@ -472,6 +472,9 @@ class AutoRenewActivity : AppCompatActivity() {
         // Cancelar work agendado
         WorkManager.getInstance(this).cancelAllWorkByTag(renewalWorkTag)
 
+        // Obter preferências
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+
         // Manter contadores visíveis - NÃO zerar aqui
         // Os contadores serão zerados apenas ao pressionar START para nova reserva
         
