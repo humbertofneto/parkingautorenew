@@ -26,6 +26,17 @@ class ParkingRenewalWorker(
                 Log.d("ParkingRenewalWorker", "Auto-renew not enabled, skipping")
                 return Result.success()
             }
+            
+            // Verificar se houve renovação muito recente
+            val lastRenewalTime = prefs.getLong("last_renewal_time", 0)
+            val now = System.currentTimeMillis()
+            val timeSinceLastRenewal = now - lastRenewalTime
+            
+            // Se última renovação foi há menos de 60 segundos, pular
+            if (timeSinceLastRenewal < 60000) {
+                Log.d("ParkingRenewalWorker", "Recent renewal detected (${timeSinceLastRenewal/1000}s ago), skipping")
+                return Result.success()
+            }
 
             val plate = prefs.getString("license_plate", "") ?: ""
             val duration = prefs.getString("parking_duration", "") ?: ""

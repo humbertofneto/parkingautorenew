@@ -192,6 +192,18 @@ class AutoRenewActivity : AppCompatActivity() {
 
     private fun executeRenewal(plate: String, duration: String) {
         Log.d("AutoRenewActivity", "Executing renewal - Plate: $plate, Duration: $duration")
+        
+        // Verificar se houve renovação muito recente (evitar duplicatas)
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        val lastRenewalTime = prefs.getLong("last_renewal_time", 0)
+        val now = System.currentTimeMillis()
+        val timeSinceLastRenewal = now - lastRenewalTime
+        
+        // Se a última renovação foi há menos de 30 segundos, pular
+        if (timeSinceLastRenewal < 30000) {
+            Log.w("AutoRenewActivity", "Renewal attempted too soon (${timeSinceLastRenewal/1000}s ago), skipping")
+            return
+        }
 
         statusText.text = "Status: Executando renovação...\nPlaca: $plate"
 
@@ -201,6 +213,11 @@ class AutoRenewActivity : AppCompatActivity() {
             onSuccess = { confirmationDetails ->
                 Log.d("AutoRenewActivity", "Renewal completed successfully")
                 lastConfirmationDetails = confirmationDetails
+                
+                // Salvar timestamp da renovação
+                val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+                prefs.edit().putLong("last_renewal_time", System.currentTimeMillis()).apply()
+                
                 incrementSuccessCount()
                 updateStatusWithConfirmation(confirmationDetails)
                 startCountdownTimer()
