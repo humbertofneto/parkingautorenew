@@ -178,14 +178,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textSize="18sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#1976D2"
                 android:gravity="center"
-                android:padding="16dp"
+                android:padding="8dp"
                 android:background="#E3F2FD"
                 android:visibility="gone"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="8dp"
+                android:singleLine="true"
+                android:ellipsize="none" />
 
         </LinearLayout>
     </ScrollView>
