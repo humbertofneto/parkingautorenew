@@ -131,6 +131,10 @@ class AutoRenewActivity : AppCompatActivity() {
         // Esconder botão STOP na tela inicial (não há renovação rodando)
         stopButton.visibility = View.GONE
         
+        // Esconder contadores na tela inicial (não há operações ainda)
+        successCountText.visibility = View.GONE
+        failureCountText.visibility = View.GONE
+        
         // Registrar BroadcastReceiver para atualizações do Service
         val filter = IntentFilter().apply {
             addAction("RENEWAL_START")
