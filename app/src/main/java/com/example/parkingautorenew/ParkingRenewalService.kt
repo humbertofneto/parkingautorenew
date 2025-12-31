@@ -24,6 +24,8 @@ class ParkingRenewalService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "parking_auto_renew_channel"
         private const val CHANNEL_NAME = "Parking Auto Renew"
+        private const val SUCCESS_CHANNEL_ID = "parking_success_channel"
+        private const val SUCCESS_CHANNEL_NAME = "Renovações Concluídas"
         private const val ALARM_REQUEST_CODE = 1234
     }
     
@@ -68,6 +70,9 @@ class ParkingRenewalService : Service() {
     
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            
+            // Canal para status do serviço
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
@@ -75,11 +80,21 @@ class ParkingRenewalService : Service() {
             ).apply {
                 description = "Notificações para auto renovação de estacionamento"
             }
-            
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
             
-            Log.d(TAG, "Notification channel created")
+            // Canal para notificações de sucesso
+            val successChannel = NotificationChannel(
+                SUCCESS_CHANNEL_ID,
+                SUCCESS_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notificações quando renovação é concluída com sucesso"
+                enableVibration(true)
+                enableLights(true)
+            }
+            notificationManager.createNotificationChannel(successChannel)
+            
+            Log.d(TAG, "Notification channels created")
         }
     }
     
@@ -160,6 +175,9 @@ class ParkingRenewalService : Service() {
                     "Renovação concluída",
                     "Expira: ${confirmationDetails.expiryTime}"
                 )
+                
+                // Enviar notificação de sucesso separada
+                sendSuccessNotification(confirmationDetails)
                 
                 // Salvar última confirmação
                 prefs.edit().apply {
@@ -376,6 +394,40 @@ class ParkingRenewalService : Service() {
         }
         
         updateNotification("Auto-Renew ativo", content)
+    }
+    
+    private fun sendSuccessNotification(confirmationDetails: ConfirmationDetails) {
+        val intent = Intent(this, AutoRenewActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            System.currentTimeMillis().toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        val notification = NotificationCompat.Builder(this, SUCCESS_CHANNEL_ID)
+            .setContentTitle("✅ Renovação concluída")
+            .setContentText("Confirmação #${confirmationDetails.confirmationNumber}")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(
+                        "Confirmação: #${confirmationDetails.confirmationNumber}\n" +
+                        "Placa: ${confirmationDetails.plate}\n" +
+                        "Válido até: ${confirmationDetails.expiryTime}\n" +
+                        "Local: ${confirmationDetails.location}"
+                    )
+            )
+            .setSmallIcon(R.drawable.ic_parking)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setVibrate(longArrayOf(0, 250, 250, 250))
+            .build()
+        
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        
+        Log.d(TAG, "Success notification sent")
     }
     
     override fun onDestroy() {
