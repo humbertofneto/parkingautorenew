@@ -206,6 +206,9 @@ class ParkingRenewalService : Service() {
         Log.d(TAG, "Starting automation with plate=$plate, duration=$duration")
         automationManager?.start(plate, duration)
         Log.d(TAG, "automationManager.start() called")
+        
+        // Agendar próxima renovação após esta
+        scheduleNextRenewal()
     }
     
     private fun scheduleNextRenewal() {
@@ -223,18 +226,46 @@ class ParkingRenewalService : Service() {
         
         Log.d(TAG, "Scheduling next renewal in ${delayMillis / 1000 / 60} minutes")
         
-        // Usar Handler para agendar próxima renovação
+        // Usar AlarmManager para garantir execução mesmo em background
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, ParkingRenewalService::class.java).apply {
+            action = "EXECUTE_RENEWAL"
+        }
+        val pendingIntent = PendingIntent.getService(
+            this,
+            ALARM_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        val triggerTime = System.currentTimeMillis() + delayMillis
+        
+        // Usar setExactAndAllowWhileIdle para garantir execução mesmo em Doze mode
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                pendingIntent
+            )
+            Log.d(TAG, "AlarmManager: setExactAndAllowWhileIdle scheduled")
+        } else {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                pendingIntent
+            )
+            Log.d(TAG, "AlarmManager: setExact scheduled")
+        }
+        
+        // Também usar Handler como backup (pode não funcionar em background profundo)
         renewalHandler.postDelayed({
             if (isRunning) {
-                Log.d(TAG, "Timer fired - executing renewal")
+                Log.d(TAG, "Handler backup fired - executing renewal")
                 executeRenewal()
-                scheduleNextRenewal()
-            } else {
-                Log.d(TAG, "Timer fired but service not running, cancelling")
             }
         }, delayMillis)
         
-        Log.d(TAG, "Next renewal scheduled in ${delayMillis / 1000 / 60} minutes")
+        Log.d(TAG, "Next renewal scheduled in ${delayMillis / 1000 / 60} minutes using AlarmManager + Handler")
     }
     
     private fun stopAutoRenew() {
@@ -242,6 +273,24 @@ class ParkingRenewalService : Service() {
         
         isRunning = false
         renewalHandler.removeCallbacksAndMessages(null)
+        
+        // Cancel any pending AlarmManager alarms
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, ParkingRenewalService::class.java).apply {
+            action = "EXECUTE_RENEWAL"
+        }
+        val pendingIntent = PendingIntent.getService(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (pendingIntent != null) {
+            alarmManager.cancel(pendingIntent)
+            pendingIntent.cancel()
+            Log.d(TAG, "Canceled pending AlarmManager alarm")
+        }
+        
         automationManager?.stop()
         
         stopForeground(true)
