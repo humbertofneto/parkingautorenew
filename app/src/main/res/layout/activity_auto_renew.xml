@@ -248,40 +248,43 @@
         <Button
             android:id="@+id/startButton"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="70dp"
             android:layout_weight="1"
             android:text="Start\nAuto-Renew"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#4CAF50"
-            android:layout_marginEnd="4dp" />
+            android:background="@drawable/button_rounded"
+            android:padding="8dp"
+            android:layout_marginEnd="6dp" />
 
         <Button
             android:id="@+id/stopButton"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="70dp"
             android:layout_weight="1"
             android:text="Stop\nAuto-Renew"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#F44336"
+            android:background="@drawable/button_rounded_red"
+            android:padding="8dp"
             android:enabled="false"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp" />
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp" />
 
         <Button
             android:id="@+id/exitButton"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="70dp"
             android:layout_weight="1"
             android:text="Exit\nApp"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#757575"
-            android:layout_marginStart="4dp" />
+            android:background="@drawable/button_rounded_gray"
+            android:padding="8dp"
+            android:layout_marginStart="6dp" />
 
     </LinearLayout>
 
