@@ -432,7 +432,13 @@ class ParkingAutomationManager(
                         successCalled = true
                         isExecuting = false
                         
+                        // PARAR WebView imediatamente
+                        Log.d(TAG, "Stopping WebView to prevent continuous reloading")
                         Handler(Looper.getMainLooper()).post {
+                            webView.stopLoading()
+                            webView.loadUrl("about:blank")
+                            
+                            // Chamar callback de sucesso
                             onSuccess(confirmationDetails)
                         }
                     } else {
