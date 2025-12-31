@@ -16,6 +16,7 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.ArrayAdapter
+import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -183,9 +184,11 @@ class AutoRenewActivity : AppCompatActivity() {
         isRunning = true
         startButton.isEnabled = false
         stopButton.isEnabled = true
-        licensePlateInput.isEnabled = false
-        parkingDurationSpinner.isEnabled = false
-        renewalFrequencySpinner.isEnabled = false
+        
+        // Esconder campos de input
+        licensePlateInput.visibility = View.GONE
+        parkingDurationSpinner.visibility = View.GONE
+        renewalFrequencySpinner.visibility = View.GONE
 
         statusText.text = "Status: Auto-Renew ativo\nPlaca: $plate\nDuração: $duration\nRenovação: a cada $frequency"
 
@@ -196,6 +199,12 @@ class AutoRenewActivity : AppCompatActivity() {
             putString("parking_duration", duration)
             putString("renewal_frequency", frequency)
             putBoolean("auto_renew_enabled", true)
+            
+            // Salvar timestamp da primeira renovação se não existir
+            if (!contains("first_renewal_time")) {
+                putLong("first_renewal_time", System.currentTimeMillis())
+            }
+            
             apply()
         }
 
@@ -377,11 +386,41 @@ class AutoRenewActivity : AppCompatActivity() {
         isRunning = false
         startButton.isEnabled = true
         stopButton.isEnabled = false
-        licensePlateInput.isEnabled = true
-        parkingDurationSpinner.isEnabled = true
-        renewalFrequencySpinner.isEnabled = true
+        
+        // Mostrar campos de input novamente
+        licensePlateInput.visibility = View.VISIBLE
+        parkingDurationSpinner.visibility = View.VISIBLE
+        renewalFrequencySpinner.visibility = View.VISIBLE
 
-        statusText.text = "Status: Auto-Renew parado"
+        // Obter estatísticas
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        val successCount = prefs.getInt("success_count", 0)
+        val failureCount = prefs.getInt("failure_count", 0)
+        val firstRenewalTime = prefs.getLong("first_renewal_time", 0)
+        val lastRenewalTime = prefs.getLong("last_renewal_time", 0)
+        
+        // Calcular tempo total
+        val totalTimeText = if (firstRenewalTime > 0 && lastRenewalTime > 0) {
+            val totalMillis = lastRenewalTime - firstRenewalTime
+            val hours = (totalMillis / 1000 / 60 / 60).toInt()
+            val minutes = ((totalMillis / 1000 / 60) % 60).toInt()
+            
+            when {
+                hours > 0 -> "${hours}h ${minutes}min"
+                minutes > 0 -> "${minutes}min"
+                else -> "menos de 1 minuto"
+            }
+        } else {
+            "N/A"
+        }
+        
+        // Exibir resumo
+        statusText.text = """Status: Auto-Renew parado
+            |
+            |═══ RESUMO ═══
+            |✅ Renovações bem-sucedidas: $successCount
+            |❌ Falhas: $failureCount
+            |⏱ Tempo total de estacionamento: $totalTimeText""".trimMargin()
         
         // Parar Foreground Service
         val serviceIntent = Intent(this, ParkingRenewalService::class.java)
@@ -391,14 +430,21 @@ class AutoRenewActivity : AppCompatActivity() {
         // Cancelar work agendado
         WorkManager.getInstance(this).cancelAllWorkByTag(renewalWorkTag)
 
-        // Limpar preferências
-        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        // Zerar contadores e limpar preferências
         prefs.edit().apply {
             putBoolean("auto_renew_enabled", false)
+            putInt("success_count", 0)
+            putInt("failure_count", 0)
+            remove("first_renewal_time")
+            remove("last_renewal_time")
             apply()
         }
+        
+        // Atualizar UI dos contadores
+        successCountText.text = "0"
+        failureCountText.text = "0"
 
-        Log.d("AutoRenewActivity", "Auto-renew stopped, service stopped")
+        Log.d("AutoRenewActivity", "Auto-renew stopped, counters reset")
     }
 
     private fun loadCounters() {
