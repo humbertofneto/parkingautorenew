@@ -170,7 +170,9 @@ class ParkingRenewalService : Service() {
             }
         )
         
+        Log.d(TAG, "Starting automation with plate=$plate, duration=$duration")
         automationManager?.start(plate, duration)
+        Log.d(TAG, "automationManager.start() called")
     }
     
     private fun scheduleNextRenewal() {

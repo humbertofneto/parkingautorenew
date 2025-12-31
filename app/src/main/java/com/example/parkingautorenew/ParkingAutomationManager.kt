@@ -46,7 +46,8 @@ class ParkingAutomationManager(
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                Log.d(TAG, "Page finished loading")
+                Log.d(TAG, "========== onPageFinished() ==========")
+                Log.d(TAG, "URL: $url, currentPage: $currentPage")
                 
                 // Aguardar um pouco para garantir que a página está renderizada
                 Handler(Looper.getMainLooper()).postDelayed({
