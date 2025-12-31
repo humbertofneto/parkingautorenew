@@ -35,6 +35,7 @@ class AutoRenewActivity : AppCompatActivity() {
     
     companion object {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
+        private const val SCHEDULE_EXACT_ALARM_REQUEST_CODE = 1002
     }
     private lateinit var licensePlateInput: EditText
     private lateinit var parkingDurationSpinner: Spinner
@@ -149,8 +150,9 @@ class AutoRenewActivity : AppCompatActivity() {
         // Esconder contadores na tela inicial (não há operações ainda)
         countersLayout.visibility = View.GONE
         
-        // Solicitar permissão de notificação para Android 13+
+        // Solicitar permissões necessárias
         requestNotificationPermission()
+        requestScheduleExactAlarmPermission()
         
         // Registrar BroadcastReceiver para atualizações do Service
         val filter = IntentFilter().apply {
@@ -168,6 +170,25 @@ class AutoRenewActivity : AppCompatActivity() {
         Log.d("AutoRenewActivity", "=== onCreate() COMPLETE ===")
     }
     
+    private fun requestScheduleExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.SCHEDULE_EXACT_ALARM
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.SCHEDULE_EXACT_ALARM),
+                    SCHEDULE_EXACT_ALARM_REQUEST_CODE
+                )
+                Log.d("AutoRenewActivity", "Requesting SCHEDULE_EXACT_ALARM permission")
+            } else {
+                Log.d("AutoRenewActivity", "SCHEDULE_EXACT_ALARM permission already granted")
+            }
+        }
+    }
+    
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
@@ -178,7 +199,7 @@ class AutoRenewActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    NOTIFICATION_PERMISSION_REQUEST_CODE
+                    SCHEDULE_EXACT_ALARM_REQUEST_CODE
                 )
                 Log.d("AutoRenewActivity", "Requesting notification permission")
             } else {

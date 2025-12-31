@@ -241,20 +241,35 @@ class ParkingRenewalService : Service() {
         val triggerTime = System.currentTimeMillis() + delayMillis
         
         // Usar setExactAndAllowWhileIdle para garantir execução mesmo em Doze mode
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-            Log.d(TAG, "AlarmManager: setExactAndAllowWhileIdle scheduled")
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-            Log.d(TAG, "AlarmManager: setExact scheduled")
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+                Log.d(TAG, "AlarmManager: setExactAndAllowWhileIdle scheduled")
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+                Log.d(TAG, "AlarmManager: setExact scheduled")
+            }
+        } catch (e: SecurityException) {
+            // Fallback: usar setAndAllowWhileIdle se SCHEDULE_EXACT_ALARM não foi concedida
+            Log.w(TAG, "SCHEDULE_EXACT_ALARM permission denied, using setAndAllowWhileIdle instead: ${e.message}")
+            try {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+                Log.d(TAG, "AlarmManager: setAndAllowWhileIdle scheduled (fallback)")
+            } catch (e2: Exception) {
+                Log.e(TAG, "Failed to schedule alarm with both setExactAndAllowWhileIdle and setAndAllowWhileIdle: ${e2.message}", e2)
+            }
         }
         
         // Também usar Handler como backup (pode não funcionar em background profundo)
