@@ -207,6 +207,7 @@ class AutoRenewActivity : AppCompatActivity() {
         isRunning = true
         startButton.isEnabled = false
         stopButton.isEnabled = true
+        stopButton.visibility = View.VISIBLE
         
         // Esconder campos de input
         licensePlateInput.visibility = View.GONE
@@ -418,6 +419,7 @@ class AutoRenewActivity : AppCompatActivity() {
         isRunning = false
         startButton.isEnabled = true
         stopButton.isEnabled = false
+        stopButton.visibility = View.GONE
         
         // Mostrar campos de input novamente
         licensePlateInput.visibility = View.VISIBLE
