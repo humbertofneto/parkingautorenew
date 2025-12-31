@@ -194,17 +194,17 @@ class AutoRenewActivity : AppCompatActivity() {
 
         // Guardar configurações para o background service usar
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        
+        // Salvar timestamp da primeira renovação se não existir
+        if (!prefs.contains("first_renewal_time")) {
+            prefs.edit().putLong("first_renewal_time", System.currentTimeMillis()).apply()
+        }
+        
         prefs.edit().apply {
             putString("license_plate", plate)
             putString("parking_duration", duration)
             putString("renewal_frequency", frequency)
             putBoolean("auto_renew_enabled", true)
-            
-            // Salvar timestamp da primeira renovação se não existir
-            if (!contains("first_renewal_time")) {
-                putLong("first_renewal_time", System.currentTimeMillis())
-            }
-            
             apply()
         }
 
