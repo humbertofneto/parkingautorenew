@@ -113,9 +113,24 @@ class ParkingRenewalService : Service() {
     }
     
     private fun executeRenewal() {
-        Log.d(TAG, "Executing renewal...")
+        Log.d(TAG, "executeRenewal() called")
         
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        
+        // Verificar se houve renovação muito recente
+        val lastRenewalTime = prefs.getLong("last_renewal_time", 0)
+        val now = System.currentTimeMillis()
+        val timeSinceLastRenewal = now - lastRenewalTime
+        
+        Log.d(TAG, "Time since last renewal: ${timeSinceLastRenewal/1000}s")
+        
+        // Se última renovação foi há menos de 60 segundos, pular
+        if (timeSinceLastRenewal < 60000 && lastRenewalTime > 0) {
+            Log.w(TAG, "Renewal attempted too soon (${timeSinceLastRenewal/1000}s ago), skipping")
+            updateNotification("Auto-Renew ativo", "Próxima renovação em ${(60000 - timeSinceLastRenewal)/1000}s")
+            return
+        }
+        
         val plate = prefs.getString("license_plate", "") ?: ""
         val duration = prefs.getString("parking_duration", "1 Hour") ?: "1 Hour"
         
@@ -130,7 +145,8 @@ class ParkingRenewalService : Service() {
         automationManager = ParkingAutomationManager(
             webView,
             onSuccess = { confirmationDetails ->
-                Log.d(TAG, "Renewal completed successfully")
+                Log.d(TAG, "========== Service: Renewal SUCCESS ==========")
+                Log.d(TAG, "Confirmation: ${confirmationDetails.confirmationNumber}")
                 updateNotification(
                     "Renovação concluída",
                     "Expira: ${confirmationDetails.expiryTime}"
@@ -148,7 +164,8 @@ class ParkingRenewalService : Service() {
                 }
             },
             onError = { error ->
-                Log.e(TAG, "Renewal error: $error")
+                Log.e(TAG, "========== Service: Renewal ERROR ==========")
+                Log.e(TAG, "Error: $error")
                 updateNotification("Erro na renovação", error)
             }
         )
