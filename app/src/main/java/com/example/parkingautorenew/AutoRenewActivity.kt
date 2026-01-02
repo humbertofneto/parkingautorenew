@@ -350,7 +350,7 @@ class AutoRenewActivity : AppCompatActivity() {
         Log.d("AutoRenewActivity", "startAutoRenew - Plate: $plate, Duration: $duration, Frequency: $frequency")
 
         isRunning = true
-        startButton.visibility = View.GONE
+        startButton.visibility = View.GONE  // Esconder durante execução
         stopButton.isEnabled = true
         stopButton.visibility = View.VISIBLE
         
@@ -589,7 +589,9 @@ class AutoRenewActivity : AppCompatActivity() {
         countdownHandler.removeCallbacksAndMessages(null)
 
         isRunning = false
-        startButton.visibility = View.VISIBLE
+        startButton.visibility = View.VISIBLE  // Mostrar novamente
+        startButton.text = "Start Again"  // Mudar texto para indicar restart
+        startButton.isEnabled = true
         stopButton.isEnabled = false
         stopButton.visibility = View.GONE
         
@@ -658,6 +660,7 @@ class AutoRenewActivity : AppCompatActivity() {
         
         // Voltar botão para estado original
         startButton.visibility = View.VISIBLE
+        startButton.text = "Start"  // Texto original
         startButton.isEnabled = true
         
         // Mostrar campos de entrada vazios
