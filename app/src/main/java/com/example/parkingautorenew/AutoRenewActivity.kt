@@ -186,7 +186,13 @@ class AutoRenewActivity : AppCompatActivity() {
 
         Log.d("AutoRenewActivity", "=== onCreate() COMPLETE ===")
     }
-    
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        Log.d("AutoRenewActivity", "onNewIntent() called - Activity already in stack with existing session")
+        // Apenas trazer para foreground, não fazer nada pois a sessão já está ativa
+    }
+
     private fun requestScheduleExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
             if (ContextCompat.checkSelfPermission(

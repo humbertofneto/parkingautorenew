@@ -29,6 +29,16 @@ class MainActivity : AppCompatActivity() {
         versionText.text = "v${BuildConfig.VERSION_NAME}"
         
         Log.d("MainActivity", "All UI elements found and bound")
+        
+        // ✅ Verificar se há sessão ativa já na inicialização e redirecionar
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        val isAutoRenewEnabled = prefs.getBoolean("auto_renew_enabled", false)
+        if (isAutoRenewEnabled) {
+            Log.d("MainActivity", "onCreate: Session already active - redirecting to AutoRenewActivity")
+            val autoRenewIntent = Intent(this, AutoRenewActivity::class.java)
+            autoRenewIntent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            startActivity(autoRenewIntent)
+        }
 
         autoRenewBtn.setOnClickListener {
             Log.d("MainActivity", "AUTO RENEW clicked - Navigating to AutoRenewActivity")
