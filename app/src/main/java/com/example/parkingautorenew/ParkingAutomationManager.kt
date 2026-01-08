@@ -240,7 +240,9 @@ class ParkingAutomationManager(
     private fun handlePage2() {
         Log.d(TAG, "Handling Page 2 (Vehicle Info)")
         
-        val licensePlate = webView.getTag() as? String ?: "ABC1234"
+        // ✅ CORRIGIDO: Usar plateNumber que foi setado corretamente em start()
+        val licensePlate = plateNumber
+        Log.d(TAG, "Using license plate: $licensePlate")
         
         val script = """
             (function(){
