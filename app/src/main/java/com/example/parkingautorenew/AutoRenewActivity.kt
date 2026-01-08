@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
@@ -21,6 +22,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.ArrayAdapter
 import android.view.View
+import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -67,6 +69,7 @@ class AutoRenewActivity : AppCompatActivity() {
     private val countdownHandler = Handler(Looper.getMainLooper())
     private var nextRenewalTimeMillis: Long = 0
     private var lastConfirmationDetails: ConfirmationDetails? = null
+    private var wakeLock: PowerManager.WakeLock? = null
     
     // BroadcastReceiver para receber notificações do Service
     private val renewalBroadcastReceiver = object : BroadcastReceiver() {
@@ -395,6 +398,20 @@ class AutoRenewActivity : AppCompatActivity() {
         // ✅ Set flag estático para evitar múltiplas instâncias
         isActiveSessionRunning = true
         
+        // ✅ Manter tela ligada enquanto sessão está ativa
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
+        // ✅ Adquirir WakeLock para manter CPU ligada (fallback em case de sleep)
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (wakeLock == null) {
+            wakeLock = powerManager.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                "parkingautorenew:renewal_wakelock"
+            )
+            wakeLock?.acquire()
+            Log.d("AutoRenewActivity", "WakeLock adquirido")
+        }
+        
         isRunning = true
         startButton.visibility = View.GONE  // Esconder durante execução
         stopButton.isEnabled = true
@@ -627,6 +644,13 @@ class AutoRenewActivity : AppCompatActivity() {
         // ✅ Clear flag estático quando sessão termina
         isActiveSessionRunning = false
         
+        // ✅ Liberar WakeLock e remover FLAG_KEEP_SCREEN_ON
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+            Log.d("AutoRenewActivity", "WakeLock liberado")
+        }
+        
         // Parar countdown timer
         countdownHandler.removeCallbacksAndMessages(null)
 
@@ -807,6 +831,13 @@ class AutoRenewActivity : AppCompatActivity() {
         
         // ✅ Clear flag estático quando activity é destruída
         isActiveSessionRunning = false
+        
+        // ✅ Liberar recursos de tela
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+            Log.d("AutoRenewActivity", "WakeLock liberado em onDestroy")
+        }
         
         // Parar todas as operações de automação
         automationManager?.stop()

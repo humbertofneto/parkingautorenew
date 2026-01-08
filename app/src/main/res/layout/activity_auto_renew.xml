@@ -296,10 +296,10 @@
         android:text="v1.0.4"
         android:textSize="10sp"
         android:textColor="#CCCCCC"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="8dp"
         android:fontFamily="monospace"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toTopOf="@id/buttonLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
