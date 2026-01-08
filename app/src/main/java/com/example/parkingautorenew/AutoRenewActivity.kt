@@ -153,6 +153,7 @@ class AutoRenewActivity : AppCompatActivity() {
             
             // Agora prosseguir normalmente para deixar user usar a app de novo
             Log.d("AutoRenewActivity", "Cleaned up, allowing user to start fresh")
+        }
 
         // Enable back button
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
