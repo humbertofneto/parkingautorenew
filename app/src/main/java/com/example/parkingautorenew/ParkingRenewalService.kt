@@ -63,7 +63,16 @@ class ParkingRenewalService : Service() {
             }
         }
         
+        // ✅ START_STICKY = Android irá recriar service se for morto
+        // ✅ Manter foreground notification sempre ativa
         return START_STICKY
+    }
+    
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d(TAG, "onTaskRemoved() - App was swiped from recents, but service continues!")
+        // ✅ NÃO fazer stopSelf() aqui - queremos que service continue!
+        // Service continua rodando mesmo se app foi removida do recents
     }
     
     override fun onBind(intent: Intent?): IBinder? {

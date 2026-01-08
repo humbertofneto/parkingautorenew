@@ -140,25 +140,15 @@ class AutoRenewActivity : AppCompatActivity() {
         
         if (autoRenewEnabled) {
             // ⚠️ RECOVERY SCENARIO: auto_renew_enabled = true mas isActiveSessionRunning = false
-            // Significa que a app foi killed enquanto renovação estava rodando
-            Log.d("AutoRenewActivity", "RECOVERY: Session was killed, restoring previous session")
+            // Significa que a Activity foi killed mas SERVICE continua rodando
+            Log.d("AutoRenewActivity", "RECOVERY: Activity was killed, restoring session from SharedPreferences")
             
-            // ✅ Restaurar estado anterior (não limpar!)
-            isActiveSessionRunning = true  // Restaurar flag estático
+            // ✅ Restaurar flag estático
+            isActiveSessionRunning = true
+            isRunning = true  // Marcar como rodando
             
-            // Parar qualquer serviço antigo que possa estar rodando
-            try {
-                val serviceIntent = Intent(this, ParkingRenewalService::class.java)
-                stopService(serviceIntent)
-            } catch (e: Exception) {
-                Log.e("AutoRenewActivity", "Error stopping old service during recovery: ${e.message}")
-            }
-            
-            // Aguardar um pouco antes de reiniciar o serviço
-            Handler(Looper.getMainLooper()).postDelayed({
-                Log.d("AutoRenewActivity", "Restarting service after recovery")
-                // Vai retomar do ponto onde parou
-            }, 500)
+            // NÃO parar o service - ele continua rodando!
+            Log.d("AutoRenewActivity", "Service should still be running, will reconnect to it")
         }
 
         // Enable back button
@@ -218,7 +208,46 @@ class AutoRenewActivity : AppCompatActivity() {
         
         Log.d("AutoRenewActivity", "BroadcastReceiver registered")
 
+        // ✅ Se foi RECOVERY, restaurar UI do estado salvo
+        if (autoRenewEnabled && isRunning) {
+            Log.d("AutoRenewActivity", "RECOVERY: Restoring UI state from SharedPreferences")
+            restoreUIFromRecovery(prefs)
+        }
+
         Log.d("AutoRenewActivity", "=== onCreate() COMPLETE ===")
+    }
+    
+    private fun restoreUIFromRecovery(prefs: android.content.SharedPreferences) {
+        // Restaurar UI para mostrar que sessão está ativa
+        startButton.visibility = View.GONE
+        stopButton.visibility = View.VISIBLE
+        stopButton.isEnabled = true
+        
+        // Esconder inputs
+        licensePlateInput.visibility = View.GONE
+        parkingDurationSpinner.visibility = View.GONE
+        renewalFrequencySpinner.visibility = View.GONE
+        emailCheckbox.visibility = View.GONE
+        emailInput.visibility = View.GONE
+        
+        // Esconder labels dos inputs
+        parkingDurationLabel.visibility = View.GONE
+        renewalFrequencyLabel.visibility = View.GONE
+        
+        // Mostrar contadores
+        countersLayout.visibility = View.VISIBLE
+        
+        // Restaurar contadores salvos
+        val successCount = prefs.getInt("success_count", 0)
+        val failureCount = prefs.getInt("failure_count", 0)
+        successCountText.text = successCount.toString()
+        failureCountText.text = failureCount.toString()
+        
+        // Mostrar status
+        statusText.visibility = View.VISIBLE
+        statusText.text = "Status: Sessão restaurada após crash\n\nReconectando ao serviço..."
+        
+        Log.d("AutoRenewActivity", "UI restored - successCount=$successCount, failureCount=$failureCount")
     }
 
     override fun onNewIntent(intent: Intent?) {
