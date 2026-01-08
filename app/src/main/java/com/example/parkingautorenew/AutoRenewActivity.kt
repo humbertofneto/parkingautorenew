@@ -664,7 +664,6 @@ class AutoRenewActivity : AppCompatActivity() {
         nextRenewalTimeMillis = System.currentTimeMillis() + intervalMillis
         
         // ✅ Salvar nextRenewalTime para RECOVERY
-        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
         prefs.edit().putLong("next_renewal_time", nextRenewalTimeMillis).apply()
         
         updateCountdown()
