@@ -268,10 +268,14 @@ class AutoRenewActivity : AppCompatActivity() {
         }
         
         // ✅ Restaurar countdown se houver próxima renovação agendada
+        // IMPORTANTE: Restaurar o tempo EXATO salvo, NÃO recalcular!
         if (nextRenewalTime > 0) {
             nextRenewalTimeMillis = nextRenewalTime
             countdownText.visibility = View.VISIBLE
-            startCountdownTimer()
+            // NÃO chamar startCountdownTimer() aqui pois ela RECALCULA o tempo!
+            // Apenas continuar com o timer existente
+            updateCountdown()
+            Log.d("AutoRenewActivity", "Countdown restaurado com tempo exato: ${nextRenewalTime - System.currentTimeMillis()}ms restantes")
         }
         
         Log.d("AutoRenewActivity", "UI restored - successCount=$successCount, failureCount=$failureCount, nextRenewal=$nextRenewalTime")
