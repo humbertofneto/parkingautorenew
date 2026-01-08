@@ -37,6 +37,10 @@ class AutoRenewActivity : AppCompatActivity() {
     companion object {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
         private const val SCHEDULE_EXACT_ALARM_REQUEST_CODE = 1002
+        
+        // ✅ SINGLETON: Flag estático que persiste enquanto a app está em memória
+        // Previne que múltiplas instâncias de AutoRenewActivity sejam criadas
+        var isActiveSessionRunning = false
     }
     private lateinit var licensePlateInput: EditText
     private lateinit var parkingDurationSpinner: Spinner
@@ -118,11 +122,18 @@ class AutoRenewActivity : AppCompatActivity() {
 
         Log.d("AutoRenewActivity", "=== onCreate() START ===")
 
-        // ✅ Proteção contra múltiplas instâncias: se houver sessão ativa em outra Activity, fechar esta
-        // Para evitar que MainActivity.onNewIntent() crie nova AutoRenewActivity enquanto uma já está rodando
+        // ✅ PROTEÇÃO DUPLA contra múltiplas instâncias:
+        // 1. Check estático (persiste em memória) - mais confiável
+        // 2. Check SharedPreferences (sobrevive restart)
+        if (isActiveSessionRunning) {
+            Log.d("AutoRenewActivity", "Session already active (static flag), finishing this instance")
+            finish()
+            return
+        }
+        
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
         if (prefs.getBoolean("auto_renew_enabled", false)) {
-            Log.d("AutoRenewActivity", "Session already active in another instance, finishing this one")
+            Log.d("AutoRenewActivity", "Session already active (prefs flag), finishing this instance")
             finish()
             return
         }
@@ -364,6 +375,9 @@ class AutoRenewActivity : AppCompatActivity() {
     private fun startAutoRenew(plate: String, duration: String, frequency: String) {
         Log.d("AutoRenewActivity", "startAutoRenew - Plate: $plate, Duration: $duration, Frequency: $frequency")
 
+        // ✅ Set flag estático para evitar múltiplas instâncias
+        isActiveSessionRunning = true
+        
         isRunning = true
         startButton.visibility = View.GONE  // Esconder durante execução
         stopButton.isEnabled = true
@@ -593,6 +607,9 @@ class AutoRenewActivity : AppCompatActivity() {
     private fun stopAutoRenew() {
         Log.d("AutoRenewActivity", "Stopping auto-renew")
         
+        // ✅ Clear flag estático quando sessão termina
+        isActiveSessionRunning = false
+        
         // Parar countdown timer
         countdownHandler.removeCallbacksAndMessages(null)
 
@@ -770,6 +787,9 @@ class AutoRenewActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("AutoRenewActivity", "onDestroy() called")
+        
+        // ✅ Clear flag estático quando activity é destruída
+        isActiveSessionRunning = false
         
         // Parar todas as operações de automação
         automationManager?.stop()
