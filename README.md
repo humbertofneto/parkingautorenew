@@ -1,54 +1,116 @@
-# Parking Info (Android, Kotlin)
+# Parking Auto Renewer (Android, Kotlin)
 
-App mínimo que abre a página `https://www.offstreet.io/location/LWLN9BUO` e, ao tocar o botão "Get Info", coleta campos visíveis (inputs, botões, selects) e mostra o JSON no texto da tela.
+App robusto que automatiza renovações de estacionamento com suporte a sessões persistentes e interface resiliente.
 
-**O que está implementado**
-- **Tela:** botão `Get Info` e área de texto para resultados.
-- **Funcionalidade:** carrega a página em WebView, injeta JavaScript, coleta e exibe JSON.
-- **Permissões:** apenas `INTERNET` no Manifest.
+**Versão:** v1.0.4 (versionCode 5)
 
-**Arquivos principais**
-- [app/src/main/java/com/example/parkingautorenew/MainActivity.kt](app/src/main/java/com/example/parkingautorenew/MainActivity.kt): lógica do botão, WebView e extração via JS.
-- [app/src/main/res/layout/activity_main.xml](app/src/main/res/layout/activity_main.xml): layout com botão e texto.
-- [app/src/main/AndroidManifest.xml](app/src/main/AndroidManifest.xml): app mínimo com permissão de internet.
+## O que está implementado
 
-**Versões (AGP/Kotlin) via Version Catalog**
-- Controladas em [gradle/libs.versions.toml](gradle/libs.versions.toml).
-- Plugins usam aliases em [build.gradle.kts](build.gradle.kts), facilitando ajustes entre máquinas.
+### Funcionalidades Principais
+- **Auto-Renew Session:** Interface completa com renovação automática de estacionamento
+- **Sessão Persistente:** Mantém ativa mesmo quando app é minimizado, clicado no ícone ou notificação
+- **Service Immortal:** Serviço de background com 3 camadas de proteção:
+  - `PARTIAL_WAKE_LOCK` mantém CPU ativa
+  - `START_REDELIVER_INTENT` recriam Service se morto
+  - `stopWithTask=false` continua mesmo se app removida do recents
+- **UI Recovery:** Restaura estado completo (contadores, confirmações, countdown) após crash/kill
+- **Countdown Preciso:** Mantém tempo exato até próxima renovação mesmo ao voltar do minimizado
+- **Bloqueio de Back Button:** Impede saída involuntária durante sessão ativa
+- **Versão Discreta:** Display discreto em cor #666666 como Debug Mode
+- **Exit Completo:** Botão EXIT para parar serviço e matar app completamente
 
-## Build no Windows (Android Studio)
-- **JDK:** selecione JDK 17 em Gradle Settings.
-- **Limpeza opcional:**
-```powershell
-cd C:\Users\Admin\Desktop\LocalCode\ParkingAutoRenew
-Remove-Item -Recurse -Force .gradle, build, app\build
-```
-- **Sync e build:**
-   - Android Studio: "Sync Project with Gradle Files" e "Make Project".
-   - Com wrapper (se presente):
-```powershell
-cd C:\Users\Admin\Desktop\LocalCode\ParkingAutoRenew
-.\u0067radlew :app:assembleDebug --warning-mode all
-```
-- **Sem wrapper:** instale Gradle e gere o wrapper (recomendado):
-```powershell
-winget install Gradle.Gradle
-cd C:\Users\Admin\Desktop\LocalCode\ParkingAutoRenew
-gradle wrapper --gradle-version 8.7 --distribution-type bin
-.\u0067radlew :app:assembleDebug --warning-mode all
-```
+### Permissões Requeridas
+- `INTERNET` - Para acesso às páginas de renovação
+- `WAKE_LOCK` - Para manter Service vivo
+- `POST_NOTIFICATIONS` - Para notificações de status
+- `SCHEDULE_EXACT_ALARM` - Para agendar renovações precisas
+- `FOREGROUND_SERVICE` - Para serviço em foreground
 
-## Build no macOS
+## Arquivos Principais
+
+- [AutoRenewActivity.kt](app/src/main/java/com/example/parkingautorenew/AutoRenewActivity.kt): Controller principal com UI recovery
+- [ParkingRenewalService.kt](app/src/main/java/com/example/parkingautorenew/ParkingRenewalService.kt): Service immortal com WakeLock
+- [MainActivity.kt](app/src/main/java/com/example/parkingautorenew/MainActivity.kt): Launcher com botão Exit
+- [activity_auto_renew.xml](app/src/main/res/layout/activity_auto_renew.xml): Layout principal
+- [activity_main.xml](app/src/main/res/layout/activity_main.xml): Tela inicial com Auto Renew e Exit
+- [AndroidManifest.xml](app/src/main/AndroidManifest.xml): Configuração com stopWithTask="false"
+
+## Build e Deployment
+
+### macOS
 ```bash
 cd /Users/humferre/localcode/autorenew
 ./gradlew :app:assembleDebug --warning-mode all
 ```
 
-## Executando
-- Instale e abra o app, toque "Get Info" e aguarde.
-- O JSON com título/url/inputs/botões/selects será exibido.
+### Windows
+```powershell
+cd C:\Users\Admin\StudioProjects\parkingautorenew
+gradlew :app:assembleDebug --warning-mode all
+```
 
-## Problemas comuns e solução
-- **Erro envolvendo `debugRuntimeClasspathCopy`:** garanta que o `app/build.gradle.kts` atual não tem blocos `configurations {...}` ou `afterEvaluate {...}` — já removidos neste projeto. Limpe `.gradle` e `build`, reinicie o Android Studio e sincronize.
-- **Incompatibilidade de versões:** use Gradle 8.7 e JDK 17; AGP/Kotlin podem ser ajustados em [gradle/libs.versions.toml](gradle/libs.versions.toml).
-- **Conteúdo dinâmico não coletado:** podemos adicionar delay/retry na execução do JavaScript. Abra uma issue ou peça ajuste.
+### Instalar APK
+```bash
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Fluxo de Uso
+
+1. **Iniciar App:** MainActivity com botões AUTO RENEW e EXIT
+2. **Clicar AUTO RENEW:** Abre AutoRenewActivity
+3. **Preencher Dados:** Placa, duração, frequência, email (opcional)
+4. **Iniciar Sessão:** Clica START
+   - Service inicia com WakeLock
+   - Renovação automática começa em background
+   - Countdown mostra tempo até próxima renovação
+5. **Minimizar:** Clica Home/sai do app
+   - Service CONTINUA rodando
+   - Notificação permanece visível
+   - Renovações continuam normalmente
+6. **Voltar:** Clica ícone do app OU notificação
+   - UI restaurada com estado exato (contadores, countdown, confirmações)
+   - Countdown mantém tempo preciso (não reseta)
+   - Sessão continua onde parou
+7. **Parar Sessão:** Clica STOP
+   - Para renovações automáticas
+   - Mostra último status
+8. **Sair Completamente:** Clica EXIT (em qualquer tela)
+   - Mata o serviço de background
+   - Encerra o processo completamente
+
+## Proteções e Garantias
+
+### Session Persistence
+- ✅ Minimize → Click Icon = Session intacta, countdown correto
+- ✅ Minimize → Click Notification = Session intacta, countdown correto
+- ✅ Remove app from recents = Service continua rodando
+- ✅ Activity crash = Service continua, UI se recupera ao voltar
+
+### Back Button Protection
+- ✅ Durante sessão ativa: back button bloqueado silenciosamente
+- ✅ Sem sessão ativa: back button funciona normalmente
+
+### Data Persistence
+- ✅ Contadores salvos (sucesso/falha)
+- ✅ Confirmação anterior salva
+- ✅ Próximo tempo de renovação exato
+- ✅ Configurações do usuário preservadas
+
+## Problemas Comuns e Solução
+
+### Build Errors
+- **Gradle sync fails:** Limpe `.gradle` e `build`, reinicie Android Studio
+- **JDK version:** Use JDK 17 ou superior
+- **Plugin incompatibility:** Verifique `gradle/libs.versions.toml`
+
+### Runtime Issues
+- **Service não inicia:** Verifique permissão `WAKE_LOCK` e `FOREGROUND_SERVICE`
+- **Notificação não aparece:** Verifique permissão `POST_NOTIFICATIONS` e canal criado
+- **Countdown reseta:** Usar `updateCountdown()` em vez de `startCountdownTimer()` no recovery
+- **App minimizado = fim da sessão:** Implementar WakeLock e START_REDELIVER_INTENT
+
+## Roadmap Futuro
+- [ ] Integração com sistema de bateria otimizado
+- [ ] JobScheduler como backup da alarma
+- [ ] Whitelist para otimização de bateria
+- [ ] Suporte a múltiplas placas simultâneas
