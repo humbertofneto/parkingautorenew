@@ -21,6 +21,7 @@ class DebugActivity : AppCompatActivity() {
     private lateinit var clearBtn: Button
     private lateinit var infoText: TextView
     private lateinit var webView: WebView
+    private lateinit var versionText: TextView
     
     private var currentUrl: String = ""
     private var captureCount: Int = 0
@@ -43,6 +44,8 @@ class DebugActivity : AppCompatActivity() {
         clearBtn = findViewById(R.id.clearBtn)
         infoText = findViewById(R.id.infoText)
         webView = findViewById(R.id.webView)
+        versionText = findViewById(R.id.versionText)
+        versionText.text = "v${BuildConfig.VERSION_NAME}"
         
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Debug Mode"

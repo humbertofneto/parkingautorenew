@@ -76,4 +76,18 @@
             android:fontFamily="monospace"/>
     </ScrollView>
 
+    <!-- Version Text -->
+    <TextView
+        android:id="@+id/versionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="v1.0.4"
+        android:textSize="10sp"
+        android:textColor="#CCCCCC"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="monospace"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

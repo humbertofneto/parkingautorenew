@@ -56,6 +56,7 @@ class AutoRenewActivity : AppCompatActivity() {
     private lateinit var countdownText: TextView
     private lateinit var totalTimeText: TextView
     private lateinit var countersLayout: LinearLayout
+    private lateinit var versionText: TextView
 
     private var isRunning = false
     private var automationManager: ParkingAutomationManager? = null
@@ -146,6 +147,8 @@ class AutoRenewActivity : AppCompatActivity() {
         renewalFrequencyLabel = findViewById(R.id.renewalFrequencyLabel)
         countdownText = findViewById(R.id.countdownText)
         countersLayout = findViewById(R.id.countersLayout)
+        versionText = findViewById(R.id.versionText)
+        versionText.text = "v${BuildConfig.VERSION_NAME}"
 
         setupAutomationWebView()
         setupSpinners()
