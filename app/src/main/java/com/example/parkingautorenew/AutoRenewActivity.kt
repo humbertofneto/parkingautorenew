@@ -122,9 +122,10 @@ class AutoRenewActivity : AppCompatActivity() {
 
         Log.d("AutoRenewActivity", "=== onCreate() START ===")
 
-        // ✅ PROTEÇÃO DUPLA contra múltiplas instâncias:
+        // ✅ PROTEÇÃO TRIPLA contra múltiplas instâncias + RECOVERY de crash:
         // 1. Check estático (persiste em memória) - mais confiável
         // 2. Check SharedPreferences (sobrevive restart)
+        // 3. RECOVERY: se prefs marcado mas estático false = app foi killed, recuperar
         if (isActiveSessionRunning) {
             Log.d("AutoRenewActivity", "Session already active (static flag), finishing this instance")
             finish()
@@ -132,11 +133,26 @@ class AutoRenewActivity : AppCompatActivity() {
         }
         
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
-        if (prefs.getBoolean("auto_renew_enabled", false)) {
-            Log.d("AutoRenewActivity", "Session already active (prefs flag), finishing this instance")
-            finish()
-            return
-        }
+        val autoRenewEnabled = prefs.getBoolean("auto_renew_enabled", false)
+        
+        if (autoRenewEnabled) {
+            // ⚠️ RECOVERY SCENARIO: auto_renew_enabled = true mas isActiveSessionRunning = false
+            // Significa que a app foi killed enquanto renovação estava rodando
+            Log.d("AutoRenewActivity", "RECOVERY: Session was killed, cleaning up and allowing recovery")
+            
+            // Limpar todos os dados da sessão anterior para evitar estado inconsistente
+            prefs.edit().clear().apply()
+            
+            // Parar qualquer serviço que possa estar tentando rodar
+            try {
+                val serviceIntent = Intent(this, ParkingRenewalService::class.java)
+                stopService(serviceIntent)
+            } catch (e: Exception) {
+                Log.e("AutoRenewActivity", "Error stopping service during recovery: ${e.message}")
+            }
+            
+            // Agora prosseguir normalmente para deixar user usar a app de novo
+            Log.d("AutoRenewActivity", "Cleaned up, allowing user to start fresh")
 
         // Enable back button
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
