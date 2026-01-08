@@ -54,9 +54,10 @@ class MainActivity : AppCompatActivity() {
         val isAutoRenewEnabled = prefs.getBoolean("auto_renew_enabled", false)
         
         if (isAutoRenewEnabled) {
-            Log.d("MainActivity", "Auto-renew is active - redirecting to AutoRenewActivity")
-            // Se houver sessão ativa, voltar para AutoRenewActivity
+            Log.d("MainActivity", "Auto-renew is active - bringing AutoRenewActivity to foreground")
+            // Se houver sessão ativa, trazer AutoRenewActivity para frente (não cria nova instância)
             val autoRenewIntent = Intent(this, AutoRenewActivity::class.java)
+            autoRenewIntent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             startActivity(autoRenewIntent)
             return
         }

@@ -30,6 +30,14 @@ class DebugActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_debug)
 
+        // ✅ Proteção: não permitir abrir DebugActivity se houver sessão ativa
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("auto_renew_enabled", false)) {
+            Log.d("DebugActivity", "Auto-renew is active, closing DebugActivity")
+            finish()
+            return
+        }
+
         urlInput = findViewById(R.id.urlInput)
         getInfoBtn = findViewById(R.id.getInfoBtn)
         clearBtn = findViewById(R.id.clearBtn)

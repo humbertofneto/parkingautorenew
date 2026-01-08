@@ -58,7 +58,6 @@ class AutoRenewActivity : AppCompatActivity() {
     private lateinit var countersLayout: LinearLayout
 
     private var isRunning = false
-    private var renewalWorkTag = "parking_auto_renew"
     private var automationManager: ParkingAutomationManager? = null
     private val countdownHandler = Handler(Looper.getMainLooper())
     private var nextRenewalTimeMillis: Long = 0
@@ -117,6 +116,15 @@ class AutoRenewActivity : AppCompatActivity() {
         setContentView(R.layout.activity_auto_renew)
 
         Log.d("AutoRenewActivity", "=== onCreate() START ===")
+
+        // ✅ Proteção contra múltiplas instâncias: se houver sessão ativa em outra Activity, fechar esta
+        // Para evitar que MainActivity.onNewIntent() crie nova AutoRenewActivity enquanto uma já está rodando
+        val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("auto_renew_enabled", false)) {
+            Log.d("AutoRenewActivity", "Session already active in another instance, finishing this one")
+            finish()
+            return
+        }
 
         // Enable back button
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -330,8 +338,6 @@ class AutoRenewActivity : AppCompatActivity() {
                 val serviceIntent = Intent(this, ParkingRenewalService::class.java)
                 serviceIntent.action = "STOP_AUTO_RENEW"
                 startService(serviceIntent)
-                
-                WorkManager.getInstance(this).cancelAllWorkByTag(renewalWorkTag)
             }
             
             // Zerar todos os dados e contadores
@@ -436,20 +442,9 @@ class AutoRenewActivity : AppCompatActivity() {
             else -> Pair(1, TimeUnit.HOURS)
         }
 
-        val renewalRequest = PeriodicWorkRequestBuilder<ParkingRenewalWorker>(
-            timeUnit.first.toLong(),
-            timeUnit.second
-        )
-            .addTag(renewalWorkTag)
-            .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            renewalWorkTag,
-            androidx.work.ExistingPeriodicWorkPolicy.REPLACE,
-            renewalRequest
-        )
-
-        Log.d("AutoRenewActivity", "Renewal scheduled every ${timeUnit.first} ${timeUnit.second}")
+        // Renovação é agendada por AlarmManager + Handler em ParkingRenewalService
+        // WorkManager não é usado (redundante com AlarmManager)
+        Log.d("AutoRenewActivity", "Renewal scheduled by ParkingRenewalService every ${timeUnit.first} ${timeUnit.second}")
     }
 
     private fun executeRenewal(plate: String, duration: String) {
@@ -620,9 +615,6 @@ class AutoRenewActivity : AppCompatActivity() {
         serviceIntent.action = "STOP_AUTO_RENEW"
         startService(serviceIntent)
 
-        // Cancelar work agendado
-        WorkManager.getInstance(this).cancelAllWorkByTag(renewalWorkTag)
-
         // Obter preferências e calcular tempo total
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
         val firstRenewalTime = prefs.getLong("first_renewal_time", 0)
@@ -769,16 +761,23 @@ class AutoRenewActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("AutoRenewActivity", "onDestroy() called")
-        countdownHandler.removeCallbacksAndMessages(null)
+        
+        // Parar todas as operações de automação
         automationManager?.stop()
         
-        // Desregistrar BroadcastReceiver
+        // Remover todos os callbacks pendentes
+        countdownHandler.removeCallbacksAndMessages(null)
+        
+        // Desregistrar BroadcastReceiver para evitar broadcasts fantasmas
         try {
             unregisterReceiver(renewalBroadcastReceiver)
-            Log.d("AutoRenewActivity", "BroadcastReceiver unregistered")
+            Log.d("AutoRenewActivity", "BroadcastReceiver unregistered successfully")
         } catch (e: Exception) {
             Log.e("AutoRenewActivity", "Error unregistering receiver: ${e.message}")
         }
+        
+        // Limpar AutomationManager completamente
+        automationManager = null
     }
 
     override fun onSupportNavigateUp(): Boolean {
