@@ -8,9 +8,11 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
     private lateinit var autoRenewBtn: Button
+    private lateinit var exitBtn: Button
     private lateinit var debugIcon: LinearLayout
     private lateinit var versionText: TextView
 
@@ -22,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         Log.d("MainActivity", "Layout inflated from activity_main.xml")
 
         autoRenewBtn = findViewById(R.id.autoRenewBtn)
+        exitBtn = findViewById(R.id.exitBtn)
         debugIcon = findViewById(R.id.debugIcon)
         versionText = findViewById(R.id.versionText)
         
@@ -46,6 +49,16 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "AUTO RENEW clicked - Navigating to AutoRenewActivity")
             val intent = Intent(this, AutoRenewActivity::class.java)
             startActivity(intent)
+        }
+
+        exitBtn.setOnClickListener {
+            Log.d("MainActivity", "EXIT clicked - Stopping service and killing app process")
+            // Parar o serviço de renovação
+            val stopServiceIntent = Intent(this, ParkingRenewalService::class.java)
+            stopService(stopServiceIntent)
+            // Matar o processo completamente
+            Log.d("MainActivity", "App process killed - exitProcess()")
+            exitProcess(0)
         }
 
         debugIcon.setOnClickListener {

@@ -980,4 +980,14 @@ class AutoRenewActivity : AppCompatActivity() {
             }
         }
     }
+
+    // Bloquear o botão de voltar durante uma sessão ativa
+    override fun onBackPressed() {
+        if (isRunning) {
+            // Ignorar silenciosamente o back press durante sessão ativa
+            return
+        }
+        // Permitir voltar apenas se não há sessão ativa
+        super.onBackPressed()
+    }
 }
