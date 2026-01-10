@@ -26,9 +26,9 @@ class ParkingRenewalService : Service() {
         private const val CHANNEL_ID = "parking_auto_renew_channel"
         private const val CHANNEL_NAME = "Parking Auto Renew"
         private const val SUCCESS_CHANNEL_ID = "parking_success_channel"
-        private const val SUCCESS_CHANNEL_NAME = "Renovações Concluídas"
+        private const val SUCCESS_CHANNEL_NAME = "Completed Renewals"
         private const val ERROR_CHANNEL_ID = "parking_error_channel"
-        private const val ERROR_CHANNEL_NAME = "Erros de Renovação"
+        private const val ERROR_CHANNEL_NAME = "Renewal Errors"
         private const val ALARM_REQUEST_CODE = 1234
     }
     
@@ -100,7 +100,7 @@ class ParkingRenewalService : Service() {
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Notificações para auto renovação de estacionamento"
+                description = "Notifications for auto parking renewal"
             }
             notificationManager.createNotificationChannel(channel)
             
@@ -110,7 +110,7 @@ class ParkingRenewalService : Service() {
                 SUCCESS_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notificações quando renovação é concluída com sucesso"
+                description = "Notifications when renewal is completed successfully"
                 enableVibration(true)
                 enableLights(true)
             }
@@ -122,7 +122,7 @@ class ParkingRenewalService : Service() {
                 ERROR_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notificações quando renovação falha"
+                description = "Notifications when renewal fails"
                 enableVibration(true)
                 enableLights(true)
             }

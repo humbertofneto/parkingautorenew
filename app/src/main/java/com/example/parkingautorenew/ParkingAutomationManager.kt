@@ -67,7 +67,7 @@ class ParkingAutomationManager(
             if (isExecuting && !successCalled) {
                 Log.e(TAG, "Automation timeout after ${TIMEOUT_MILLIS/1000}s")
                 isExecuting = false
-                onError("Timeout na automação (60 segundos)")
+                onError("Automation timeout (60 seconds)")
             }
         }
         
@@ -110,7 +110,7 @@ class ParkingAutomationManager(
                 super.onReceivedError(view, request, error)
                 Log.e(TAG, "WebView error: ${error?.description}")
                 isExecuting = false
-                onError("Erro ao carregar a página: ${error?.description}")
+                onError("Error loading page: ${error?.description}")
             }
         }
     }
@@ -185,11 +185,11 @@ class ParkingAutomationManager(
                     onPageReady(currentPage)
                 } else {
                     Log.e(TAG, "Could not detect page number")
-                    onError("Não foi possível detectar a página atual")
+                    onError("Could not detect current page")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing page result: ${e.message}")
-                onError("Erro ao processar resposta: ${e.message}")
+                onError("Error processing response: ${e.message}")
             }
         }
     }
@@ -217,7 +217,7 @@ class ParkingAutomationManager(
                     else -> {
                         Log.d(TAG, "Unknown page: $currentPage")
                         isExecuting = false
-                        onError("Página desconhecida: $currentPage")
+                        onError("Unknown page: $currentPage")
                     }
                 }
             } else {
@@ -580,7 +580,7 @@ class ParkingAutomationManager(
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing confirmation data: ${e.message}")
                 e.printStackTrace()
-                onError("Erro ao extrair dados de confirmação: ${e.message}")
+                onError("Error extracting confirmation data: ${e.message}")
             }
         }
     }

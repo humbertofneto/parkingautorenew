@@ -104,8 +104,8 @@ class AutoRenewActivity : AppCompatActivity() {
                     lastConfirmationDetails = confirmationDetails
                     incrementSuccessCount()
                     
-                    // Mostrar mensagem de sucesso temporariamente
-                    statusText.text = "Status: ✅ RENOVAÇÃO CONCLUÍDA COM SUCESSO!\n\nAtualizando informações..."
+                    // Show success message temporarily
+                    statusText.text = "Status: ✅ RENEWAL COMPLETED SUCCESSFULLY!\n\nUpdating information..."
                     
                     // Após 1.5 segundos, mostrar detalhes completos
                     Handler(Looper.getMainLooper()).postDelayed({
@@ -114,7 +114,7 @@ class AutoRenewActivity : AppCompatActivity() {
                     }, 1500)
                 } else if (status == "error") {
                     incrementFailureCount()
-                    statusText.text = "Status: Erro na renovação\n$confirmation"
+                    statusText.text = "Status: Renewal error\n$confirmation"
                 }
             }
         }
@@ -363,13 +363,13 @@ class AutoRenewActivity : AppCompatActivity() {
     private fun setupSpinners() {
         Log.d("AutoRenewActivity", "Setting up spinners")
 
-        // Spinner de Duração de Estacionamento
+        // Parking Duration Spinner
         val durationOptions = arrayOf("1 Hour", "2 Hour")
         val durationAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, durationOptions)
         durationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         parkingDurationSpinner.adapter = durationAdapter
 
-        // Spinner de Periodicidade de Renovação
+        // Renewal Frequency Spinner
         val frequencyOptions = arrayOf("5 min (test)", "30 min", "1 hour", "1:30 hour", "2 hour")
         val frequencyAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, frequencyOptions)
         frequencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -400,21 +400,21 @@ class AutoRenewActivity : AppCompatActivity() {
             
             val plate = licensePlateInput.text.toString().trim()
             if (plate.isEmpty()) {
-                statusText.text = "Status: Por favor, insira a placa do veículo"
+                statusText.text = "Status: Please enter the license plate"
                 statusText.visibility = View.VISIBLE
                 return@setOnClickListener
             }
 
-            // Validar email se checkbox marcado
+            // Validate email if checkbox is checked
             if (emailCheckbox.isChecked) {
                 val email = emailInput.text.toString().trim()
                 if (email.isEmpty()) {
-                    statusText.text = "Status: Por favor, insira um email"
+                    statusText.text = "Status: Please enter an email"
                     statusText.visibility = View.VISIBLE
                     return@setOnClickListener
                 }
                 if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                    statusText.text = "Status: Email inválido"
+                    statusText.text = "Status: Invalid email"
                     statusText.visibility = View.VISIBLE
                     return@setOnClickListener
                 }
@@ -487,15 +487,15 @@ class AutoRenewActivity : AppCompatActivity() {
         emailCheckbox.visibility = View.GONE
         emailInput.visibility = View.GONE
         
-        // Atualizar labels com os valores escolhidos
-        licensePlateLabel.text = "Placa do Veículo: $plate"
-        parkingDurationLabel.text = "Tempo de Estacionamento: $duration"
-        renewalFrequencyLabel.text = "Renovar a Cada: $frequency"
+        // Update labels with chosen values
+        licensePlateLabel.text = "License Plate: $plate"
+        parkingDurationLabel.text = "Parking Duration: $duration"
+        renewalFrequencyLabel.text = "Renew Every: $frequency"
 
-        statusText.text = "Status: Auto-Renew ativo\nPlaca: $plate\nDuração: $duration\nRenovação: a cada $frequency"
+        statusText.text = "Status: Auto-Renew active\nPlate: $plate\nDuration: $duration\nRenewal: every $frequency"
         statusText.visibility = View.VISIBLE
         
-        // Mostrar contadores
+        // Show counters
         countersLayout.visibility = View.VISIBLE
         
         // Zerar contadores para nova reserva
@@ -582,7 +582,7 @@ class AutoRenewActivity : AppCompatActivity() {
             return
         }
 
-        statusText.text = "Status: Executando renovação...\nPlaca: $plate"
+        statusText.text = "Status: Running renewal...\nPlate: $plate"
 
         // Criar automação
         automationManager = ParkingAutomationManager(
@@ -602,7 +602,7 @@ class AutoRenewActivity : AppCompatActivity() {
             onError = { error ->
                 Log.e("AutoRenewActivity", "Renewal error: $error")
                 incrementFailureCount()
-                statusText.text = "Status: Erro na renovação\n$error"
+                statusText.text = "Status: Renewal error\n$error"
             }
         )
 
@@ -619,15 +619,15 @@ class AutoRenewActivity : AppCompatActivity() {
 
     private fun updateStatusWithConfirmation(details: ConfirmationDetails) {
         val timestamp = SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis())
-        statusText.text = """Status: Auto-Renew ativo
-            |Última renovação: $timestamp
+        statusText.text = """Status: Auto-Renew active
+            |Last renewal: $timestamp
             |
-            |═══ CONFIRMAÇÃO ═══
+            |═══ CONFIRMATION ═══
             |Start: ${details.startTime}
             |Expiry: ${details.expiryTime}
-            |Placa: ${details.plate}
-            |Local: ${details.location}
-            |Confirmação #: ${details.confirmationNumber}""".trimMargin()
+            |Plate: ${details.plate}
+            |Location: ${details.location}
+            |Confirmation #: ${details.confirmationNumber}""".trimMargin()
         
         // ✅ Salvar última confirmação em SharedPreferences para RECOVERY
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
@@ -640,13 +640,13 @@ class AutoRenewActivity : AppCompatActivity() {
             apply()
         }
         
-        // ✅ Atualizar licensePlateLabel com a placa extraída do HTML (para validar se é a mesma)
+        // ✅ Update licensePlateLabel with the plate extracted from HTML (to validate it's the same)
         licensePlateLabel.visibility = View.VISIBLE
-        licensePlateLabel.text = "Placa do Veículo: ${details.plate}"
+        licensePlateLabel.text = "License Plate: ${details.plate}"
         
-        // Mostrar o countdown separado
+        // Show countdown separately
         countdownText.visibility = View.VISIBLE
-        countdownText.text = "⏱ Próxima renovação em: calculando..."
+        countdownText.text = "⏱ Next renewal in: calculating..."
     }
     
     private fun startCountdownTimer() {
@@ -707,9 +707,9 @@ class AutoRenewActivity : AppCompatActivity() {
                     |Confirmação #: ${details.confirmationNumber}""".trimMargin()
             }
             
-            // Atualizar countdown separado
+            // Update countdown separately
             countdownText.visibility = View.VISIBLE
-            countdownText.text = "⏱ Próxima renovação em: ${minutes} min ${seconds} seg"
+            countdownText.text = "⏱ Next renewal in: ${minutes} min ${seconds} sec"
             
             // Agendar próxima atualização em 1 segundo
             countdownHandler.postDelayed({ updateCountdown() }, 1000)
@@ -774,12 +774,12 @@ class AutoRenewActivity : AppCompatActivity() {
             val totalTimeValue = when {
                 hours > 0 -> "${hours}h ${minutes}min"
                 minutes > 0 -> "${minutes}min"
-                else -> "menos de 1 minuto"
+                else -> "less than 1 minute"
             }
             
-            // Mostrar tempo total em TextView separado com label
+            // Show total time in separate TextView with label
             totalTimeText.visibility = View.VISIBLE
-            totalTimeText.text = "⏱ Tempo total estacionado: $totalTimeValue"
+            totalTimeText.text = "⏱ Total parked time: $totalTimeValue"
         }
 
         // Manter contadores visíveis - NÃO zerar aqui
@@ -819,10 +819,10 @@ class AutoRenewActivity : AppCompatActivity() {
         parkingDurationLabel.visibility = View.VISIBLE
         renewalFrequencyLabel.visibility = View.VISIBLE
         
-        // Resetar labels para texto original
-        licensePlateLabel.text = "Placa do Veículo"
-        parkingDurationLabel.text = "Tempo de Estacionamento"
-        renewalFrequencyLabel.text = "Renovar a Cada"
+        // Reset labels to original text
+        licensePlateLabel.text = "License Plate"
+        parkingDurationLabel.text = "Parking Duration"
+        renewalFrequencyLabel.text = "Renew Every"
         
         // Limpar campo de placa
         licensePlateInput.text.clear()
@@ -830,9 +830,9 @@ class AutoRenewActivity : AppCompatActivity() {
         // Esconder tempo total
         totalTimeText.visibility = View.GONE
         
-        // Mostrar status inicial
+        // Show initial status
         statusText.visibility = View.VISIBLE
-        statusText.text = "Status: Aguardando configuração"
+        statusText.text = "Status: Waiting for configuration"
         
         // Zerar e esconder contadores
         val prefs = getSharedPreferences("parking_prefs", Context.MODE_PRIVATE)
@@ -1079,13 +1079,13 @@ class AutoRenewActivity : AppCompatActivity() {
             val frequency = prefs.getString("renewal_frequency", "")
             
             if (!plate.isNullOrEmpty()) {
-                licensePlateLabel.text = "Placa do Veículo: $plate"
+                licensePlateLabel.text = "License Plate: $plate"
             }
             if (!duration.isNullOrEmpty()) {
-                parkingDurationLabel.text = "Tempo de Estacionamento: $duration"
+                parkingDurationLabel.text = "Parking Duration: $duration"
             }
             if (!frequency.isNullOrEmpty()) {
-                renewalFrequencyLabel.text = "Renovar a Cada: $frequency"
+                renewalFrequencyLabel.text = "Renew Every: $frequency"
             }
             
             // Restaurar countdown se houver
@@ -1105,11 +1105,11 @@ class AutoRenewActivity : AppCompatActivity() {
             emailCheckbox.visibility = View.VISIBLE
             
             licensePlateLabel.visibility = View.VISIBLE
-            licensePlateLabel.text = "Placa do Veículo"
+            licensePlateLabel.text = "License Plate"
             parkingDurationLabel.visibility = View.VISIBLE
-            parkingDurationLabel.text = "Tempo de Estacionamento"
+            parkingDurationLabel.text = "Parking Duration"
             renewalFrequencyLabel.visibility = View.VISIBLE
-            renewalFrequencyLabel.text = "Renovar a Cada"
+            renewalFrequencyLabel.text = "Renew Every"
             
             countersLayout.visibility = View.GONE
             countdownText.visibility = View.GONE
