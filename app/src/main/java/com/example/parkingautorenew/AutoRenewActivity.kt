@@ -152,9 +152,6 @@ class AutoRenewActivity : AppCompatActivity() {
             Log.d("AutoRenewActivity", "Service should still be running, will reconnect to it")
         }
 
-        // Enable back button
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
         licensePlateInput = findViewById(R.id.licensePlateInput)
         parkingDurationSpinner = findViewById(R.id.parkingDurationSpinner)
         renewalFrequencySpinner = findViewById(R.id.renewalFrequencySpinner)
